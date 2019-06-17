@@ -25,4 +25,9 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/app
+      - composer:/root/.composer/cache
     tty: true
+
+volumes:
+  composer:
+    driver: local

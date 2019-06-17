@@ -21,7 +21,7 @@ COPY ./../../../composer.json ./
 COPY ./../../../composer.lock ./
 
 # Install vendors
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts
 
 # Copy all project files inside built image
 COPY ./../../../ ./
