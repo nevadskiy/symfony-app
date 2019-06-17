@@ -6,7 +6,7 @@ services:
       context: docker/dev/nginx
       dockerfile: Dockerfile
     volumes:
-      - ./manager:/app
+      - ./:/app
     ports:
       - 8080:80
     depends_on:
@@ -17,12 +17,12 @@ services:
       context: docker/dev/php-fpm
       dockerfile: Dockerfile
     volumes:
-      - ./manager:/app
+      - ./:/app
 
   php-cli:
     build:
       context: docker/dev/php-cli
       dockerfile: Dockerfile
     volumes:
-      - ./manager:/app
+      - ./:/app
     tty: true

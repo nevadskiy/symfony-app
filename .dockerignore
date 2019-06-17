@@ -1,0 +1,8 @@
+/docker
+/.idea
+/vendor
+docker-compose.prod.yml
+docker-compose.yml
+Dockerfile
+Makefile
+README.md
