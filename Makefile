@@ -4,6 +4,9 @@ up:
 down:
 	docker-compose down --remove-orphans
 
+s:
+	docker-compose ps
+
 pull:
 	docker-compose pull
 
