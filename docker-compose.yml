@@ -11,6 +11,8 @@ services:
       - 8080:80
     depends_on:
       - php-fpm
+    networks:
+      - internal
 
   php-fpm:
     build:
@@ -18,6 +20,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/app
+    environment:
+      XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
+      PHP_IDE_CONFIG: "serverName=Docker"
+    networks:
+      - internal
 
   php-cli:
     build:
@@ -27,6 +34,8 @@ services:
       - ./:/app
       - composer:/root/.composer/cache
     tty: true
+    networks:
+      - internal
 
   postgres:
     image: postgres:11.2-alpine
@@ -38,9 +47,19 @@ services:
       POSTGRES_DB: app
     ports:
       - 54321:5432
+    networks:
+      - internal
 
 volumes:
   postgres:
     driver: local
   composer:
     driver: local
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.220.0/28
