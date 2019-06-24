@@ -1,7 +1,7 @@
 security:
     encoders:
         App\Entity\User:
-            algorithm: bcrypt
+            algorithm: argon2i
 
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
@@ -22,6 +22,10 @@ security:
                     - App\Security\LoginFormAuthenticator
             remember_me:
                 secret: '%kernel.secret'
+                lifetime: 604800
+                path: /
+            logout:
+                path: app_logout
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
