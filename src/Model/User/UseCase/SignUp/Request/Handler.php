@@ -4,30 +4,50 @@ declare(strict_types=1);
 
 namespace App\Model\User\UseCase\SignUp\Request;
 
+use App\Model\User\Entity\User\Email;
 use App\Model\User\Entity\User\User;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Model\User\Entity\User\UserRepository;
 use DomainException;
 
 class Handler
 {
-    private $em;
+    /**
+     * @var UserRepository
+     */
+    private $users;
+    /**
+     * @var PasswordHasher
+     */
+    private $hasher;
+    /**
+     * @var Flusher
+     */
+    private $flusher;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(UserRepository $users, PasswordHasher $hasher, Flusher $flusher)
     {
-        $this->em = $em;
+        $this->users = $users;
+        $this->hasher = $hasher;
+        $this->flusher = $flusher;
     }
 
     public function handle(Command $command): void
     {
-        $email = mb_strtolower($command->email);
+        $email = new Email($command->email);
 
-        if ($this->em->getRepository(User::class)->findOneBy(['email' => $email])) {
+        if ($this->users->hasByEmail($email)) {
             throw new DomainException("User already exists with email {$email}");
         }
 
-        $user = new User($email, password_hash($command->password, PASSWORD_BCRYPT));
+        $user = new User(
+            Id::next(),
+            $email,
+            $this->hasher->hash($command->password),
+            new \DateTimeImmutable()
+        );
 
-        $this->em->persist($user);
-        $this->em->flush();
+        $this->users->add($user);
+
+        $this->flusher->flush();
     }
 }
