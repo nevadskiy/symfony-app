@@ -15,16 +15,21 @@ class RequestTest extends TestCase
     /** @test */
     public function it_creates_successfully(): void
     {
-        $user = new User(
+        $user = User::signUpByEmail(
             $id = Id::next(),
             $email = new Email('test@mail.com'),
             $password = 'secret',
-            $registerDate = new DateTimeImmutable()
+            $registerDate = new DateTimeImmutable(),
+            $token = 'token'
         );
+
+        self::assertTrue($user->isWait());
+        self::assertFalse($user->isActive());
 
         self::assertEquals($id, $user->getId());
         self::assertEquals($email, $user->getEmail());
         self::assertEquals($password, $user->getPasswordHash());
         self::assertEquals($registerDate, $user->getRegisterDate());
+        self::assertEquals($token, $user->getConfirmToken());
     }
 }
