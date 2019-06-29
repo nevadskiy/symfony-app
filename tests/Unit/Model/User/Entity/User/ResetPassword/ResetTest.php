@@ -4,80 +4,51 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Model\User\Entity\User\ResetPassword;
 
-use App\Model\User\Entity\User\Email;
-use App\Model\User\Entity\User\Id;
 use App\Model\User\Entity\User\ResetPasswordToken;
-use App\Model\User\Entity\User\User;
+use App\Tests\Factory\UserFactory;
 use DateTimeImmutable;
 use DomainException;
 use PHPUnit\Framework\TestCase;
 
-class RequestTest extends TestCase
+class ResetTest extends TestCase
 {
     /** @test */
-    public function it_can_request_reset_password_token(): void
+    public function it_resets_successfully(): void
     {
         $now = new DateTimeImmutable();
         $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = $this->makeSignedUpUserByEmail();
+        $user = (new UserFactory())->byEmail()->create();
 
-        $user->requestPasswordReset($token, $now);
+        $user->requestPasswordReset($token, $now->modify('+1 day'));
+
+        $user->passwordReset($now, 'new-secret-hash');
 
         self::assertEquals($token, $user->getResetPasswordToken());
+        self::assertEquals('new-secret-hash', $user->getPasswordHash());
     }
 
     /** @test */
-    public function it_throws_an_exception_if_already_requested(): void
+    public function it_throws_an_exception_if_token_is_expired(): void
     {
         $now = new DateTimeImmutable();
-        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = $this->makeSignedUpUserByEmail();
+        $token = new ResetPasswordToken('token', $now);
+        $user = (new UserFactory())->byEmail()->create();
 
         $user->requestPasswordReset($token, $now);
 
         $this->expectException(DomainException::class);
 
-        $user->requestPasswordReset($token, $now);
+        $user->passwordReset($now->modify('+1 day'), 'hash');
     }
 
     /** @test */
-    public function it_requests_a_new_token_if_current_is_already_expired(): void
+    public function it_throws_an_exception_if_token_has_not_been_requests(): void
     {
         $now = new DateTimeImmutable();
-        $user = $this->makeSignedUpUserByEmail();
-
-        $oldToken = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user->requestPasswordReset($oldToken, $now);
-        self::assertEquals($oldToken, $user->getResetPasswordToken());
-
-        $newToken = new ResetPasswordToken('token', $now->modify('+3 days'));
-        $user->requestPasswordReset($newToken, $now->modify('+2 days'));
-        self::assertEquals($newToken, $user->getResetPasswordToken());
-    }
-
-    /** @test */
-    public function it_throws_an_exception_when_user_is_signed_up_without_email(): void
-    {
-        $now = new DateTimeImmutable();
-        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = $this->makeUser();
+        $user = (new UserFactory())->byEmail()->create();
 
         $this->expectException(DomainException::class);
 
-        $user->requestPasswordReset($token, $now);
-    }
-
-    private function makeSignedUpUserByEmail(): User
-    {
-        $user = $this->makeUser();
-
-        $user->signUpByEmail(new Email('example@mail.com'), 'secret', 'token');
-
-        return $user;
-    }
-
-    private function makeUser(): User
-    {
-        return new User(Id::next(), new DateTimeImmutable());
+        $user->passwordReset($now, 'hash');
     }
 }

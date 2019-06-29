@@ -42,6 +42,10 @@ class User
      * @var ArrayCollection
      */
     private $socialNetworks;
+    /**
+     * @var ResetPasswordToken
+     */
+    private $resetPasswordToken;
 
     public function __construct(Id $id, DateTimeImmutable $registerDate)
     {
@@ -148,5 +152,36 @@ class User
     public function getSocialNetworks(): array
     {
         return $this->socialNetworks->toArray();
+    }
+
+    public function requestPasswordReset(ResetPasswordToken $token, DateTimeImmutable $date): void
+    {
+        if (!$this->email) {
+            throw new DomainException('Email is not specified');
+        }
+
+        if ($this->resetPasswordToken && !$this->resetPasswordToken->isExpiredTo($date)) {
+            throw new DomainException('Reset password is already requested');
+        }
+
+        $this->resetPasswordToken = $token;
+    }
+
+    public function getResetPasswordToken(): ResetPasswordToken
+    {
+        return $this->resetPasswordToken;
+    }
+
+    public function passwordReset(DateTimeImmutable $date, string $passwordHash): void
+    {
+        if (!$this->resetPasswordToken) {
+            throw new DomainException('Resetting password has not been requested');
+        }
+
+        if ($this->resetPasswordToken->isExpiredTo($date)) {
+            throw new DomainException('Reset password token is expired');
+        }
+
+        $this->passwordHash = $passwordHash;
     }
 }

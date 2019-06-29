@@ -42,7 +42,6 @@ prod-deploy:
 test:
 	docker-compose exec php-cli php bin/phpunit
 
-
 # Application commads
 migration:
 	docker-compose exec php-cli php bin/console make:migration

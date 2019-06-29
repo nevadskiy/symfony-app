@@ -2,18 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Model\User\UseCase\SignUp\Request;
+namespace App\Model\User\UseCase\ResetPassword\Request;
 
 use App\Model\Flusher;
 use App\Model\User\Entity\User\Email;
-use App\Model\User\Entity\User\Id;
-use App\Model\User\Entity\User\User;
 use App\Model\User\Entity\User\UserRepository;
-use App\Model\User\Service\SignUpConfirmTokenizer;
-use App\Model\User\Service\ConfirmTokenSender;
-use App\Model\User\Service\PasswordHasher;
+use App\Model\User\Service\ResetPasswordTokenizer;
+use App\Model\User\Service\ResetPasswordTokenSender;
 use DateTimeImmutable;
-use DomainException;
 
 class Handler
 {
@@ -22,32 +18,26 @@ class Handler
      */
     private $users;
     /**
-     * @var PasswordHasher
-     */
-    private $hasher;
-    /**
      * @var Flusher
      */
     private $flusher;
     /**
-     * @var SignUpConfirmTokenizer
+     * @var ResetPasswordTokenizer
      */
     private $tokenizer;
     /**
-     * @var ConfirmTokenSender
+     * @var ResetPasswordTokenSender
      */
     private $sender;
 
     public function __construct(
         UserRepository $users,
-        PasswordHasher $hasher,
-        SignUpConfirmTokenizer $tokenizer,
-        ConfirmTokenSender $sender,
+        ResetPasswordTokenizer $tokenizer,
+        ResetPasswordTokenSender $sender,
         Flusher $flusher
     )
     {
         $this->users = $users;
-        $this->hasher = $hasher;
         $this->tokenizer = $tokenizer;
         $this->sender = $sender;
         $this->flusher = $flusher;
@@ -55,22 +45,15 @@ class Handler
 
     public function handle(Command $command): void
     {
-        $email = new Email($command->email);
+        $user = $this->users->getByEmail(new Email($command->email));
 
-        if ($this->users->hasByEmail($email)) {
-            throw new DomainException("User already exists with email {$email}");
-        }
-
-        $token = $this->tokenizer->generate();
-
-        $user = new User(Id::next(), new DateTimeImmutable());
-
-        $user->signUpByEmail($email, $this->hasher->hash($command->password), $token);
-
-        $this->users->add($user);
-
-        $this->sender->send($email, $token);
+        $user->requestPasswordReset(
+            $this->tokenizer->generate(),
+            new DateTimeImmutable()
+        );
 
         $this->flusher->flush();
+
+        $this->sender->send($user->getEmail(), $user->getResetPasswordToken());
     }
 }

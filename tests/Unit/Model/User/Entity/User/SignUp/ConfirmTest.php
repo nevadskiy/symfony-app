@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Model\User\Entity\User\SignUp;
 
-use App\Model\User\Entity\User\Email;
-use App\Model\User\Entity\User\Id;
-use App\Model\User\Entity\User\User;
-use DateTimeImmutable;
+use App\Tests\Factory\UserFactory;
 use DomainException;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +13,7 @@ class ConfirmTest extends TestCase
     /** @test */
     public function it_confirms_successfully(): void
     {
-        $user = $this->makeSignedUpUser();
+        $user = (new UserFactory())->byEmail()->create();
 
         $user->confirmSignUp();
 
@@ -29,21 +26,12 @@ class ConfirmTest extends TestCase
     /** @test */
     public function it_throws_an_exception_if_already_confirmed(): void
     {
-        $user = $this->makeSignedUpUser();
+        $user = (new UserFactory())->byEmail()->create();
 
         $user->confirmSignUp();
 
         $this->expectException(DomainException::class);
 
         $user->confirmSignUp();
-    }
-
-    private function makeSignedUpUser(): User
-    {
-        $user = new User(Id::next(), new DateTimeImmutable());
-
-        $user->signUpByEmail(new Email('example@mail.com'), 'secret', 'token');
-
-        return $user;
     }
 }

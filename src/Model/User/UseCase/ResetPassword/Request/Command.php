@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Model\User\UseCase\SignUp\Request;
+namespace App\Model\User\UseCase\ResetPassword\Request;
 
 class Command
 {
@@ -10,9 +10,4 @@ class Command
      * @var string
      */
     public $email;
-
-    /**
-     * @var string
-     */
-    public $password;
 }

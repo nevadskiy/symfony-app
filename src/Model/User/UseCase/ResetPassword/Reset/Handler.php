@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Model\User\UseCase\ResetPassword\Request;
+namespace App\Model\User\UseCase\ResetPassword\Reset;
 
 use App\Model\Flusher;
-use App\Model\User\Entity\User\Email;
 use App\Model\User\Entity\User\UserRepository;
-use App\Model\User\Service\ResetPasswordTokenizer;
-use App\Model\User\Service\ResetPasswordTokenSender;
+use App\Model\User\Service\PasswordHasher;
 use DateTimeImmutable;
 
 class Handler
@@ -22,38 +20,34 @@ class Handler
      */
     private $flusher;
     /**
-     * @var ResetPasswordTokenizer
+     * @var PasswordHasher
      */
-    private $tokenizer;
-    /**
-     * @var ResetPasswordTokenSender
-     */
-    private $sender;
+    private $hasher;
 
     public function __construct(
         UserRepository $users,
-        ResetPasswordTokenizer $tokenizer,
-        ResetPasswordTokenSender $sender,
+        PasswordHasher $hasher,
         Flusher $flusher
     )
     {
         $this->users = $users;
-        $this->tokenizer = $tokenizer;
-        $this->sender = $sender;
         $this->flusher = $flusher;
+        $this->hasher = $hasher;
     }
 
     public function handle(Command $command): void
     {
-        $user = $this->users->getByEmail(new Email($command->email));
+        $user = $this->users->findByResetPasswordToken($command->token);
 
-        $user->requestPasswordReset(
-            $this->tokenizer->generate(),
-            new DateTimeImmutable()
+        if (!$user) {
+            throw new \DomainException('Invalid token');
+        }
+
+        $user->passwordReset(
+            new DateTimeImmutable(),
+            $this->hasher->hash($command->password),
         );
 
         $this->flusher->flush();
-
-        $this->sender->send($user->getEmail(), $user->getResetPasswordToken());
     }
 }

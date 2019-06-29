@@ -2,43 +2,66 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Model\User\Entity\User\SocialNetwork;
+namespace App\Tests\Unit\Model\User\Entity\User\ResetPassword;
 
-use App\Model\User\Entity\User\Id;
-use App\Model\User\Entity\User\User;
+use App\Model\User\Entity\User\ResetPasswordToken;
+use App\Tests\Factory\UserFactory;
 use DateTimeImmutable;
 use DomainException;
 use PHPUnit\Framework\TestCase;
 
-class AuthTest extends TestCase
+class RequestTest extends TestCase
 {
     /** @test */
-    public function it_creates_user_by_social_network(): void
+    public function it_can_request_reset_password_token(): void
     {
-        $user = new User(Id::next(), new DateTimeImmutable());
+        $now = new DateTimeImmutable();
+        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
+        $user = (new UserFactory())->byEmail()->create();
 
-        $user->signUpBySocialNetwork(
-            $socialNetwork = 'vk',
-            $identity = '0000001'
-        );
+        $user->requestPasswordReset($token, $now);
 
-        $socialNetworks = $user->getSocialNetworks();
-
-        self::assertTrue($user->isActive());
-        self::assertCount(1, $socialNetworks);
-        self::assertEquals($socialNetwork, $socialNetworks[0]->getName());
-        self::assertEquals($identity, $socialNetworks[0]->getIdentity());
+        self::assertEquals($token, $user->getResetPasswordToken());
     }
 
     /** @test */
-    public function it_throws_an_exception_if_already_confirmed(): void
+    public function it_throws_an_exception_if_already_requested(): void
     {
-        $user = new User(Id::next(), new DateTimeImmutable());
+        $now = new DateTimeImmutable();
+        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
+        $user = (new UserFactory())->byEmail()->create();
 
-        $user->signUpBySocialNetwork('vk', '0000001');
+        $user->requestPasswordReset($token, $now);
 
         $this->expectException(DomainException::class);
 
-        $user->signUpBySocialNetwork('vk', '0000001');
+        $user->requestPasswordReset($token, $now);
+    }
+
+    /** @test */
+    public function it_requests_a_new_token_if_current_is_already_expired(): void
+    {
+        $now = new DateTimeImmutable();
+        $user = (new UserFactory())->byEmail()->create();
+
+        $oldToken = new ResetPasswordToken('token', $now->modify('+1 day'));
+        $user->requestPasswordReset($oldToken, $now);
+        self::assertEquals($oldToken, $user->getResetPasswordToken());
+
+        $newToken = new ResetPasswordToken('token', $now->modify('+3 days'));
+        $user->requestPasswordReset($newToken, $now->modify('+2 days'));
+        self::assertEquals($newToken, $user->getResetPasswordToken());
+    }
+
+    /** @test */
+    public function it_throws_an_exception_when_user_is_signed_up_without_email(): void
+    {
+        $now = new DateTimeImmutable();
+        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
+        $user = (new UserFactory())->create();
+
+        $this->expectException(DomainException::class);
+
+        $user->requestPasswordReset($token, $now);
     }
 }
