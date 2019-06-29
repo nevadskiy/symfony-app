@@ -17,7 +17,7 @@ class RequestTest extends TestCase
     {
         $now = new DateTimeImmutable();
         $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = (new UserFactory())->byEmail()->create();
+        $user = (new UserFactory())->byEmail()->confirmed()->create();
 
         $user->requestPasswordReset($token, $now);
 
@@ -29,7 +29,7 @@ class RequestTest extends TestCase
     {
         $now = new DateTimeImmutable();
         $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = (new UserFactory())->byEmail()->create();
+        $user = (new UserFactory())->byEmail()->confirmed()->create();
 
         $user->requestPasswordReset($token, $now);
 
@@ -42,7 +42,7 @@ class RequestTest extends TestCase
     public function it_requests_a_new_token_if_current_is_already_expired(): void
     {
         $now = new DateTimeImmutable();
-        $user = (new UserFactory())->byEmail()->create();
+        $user = (new UserFactory())->byEmail()->confirmed()->create();
 
         $oldToken = new ResetPasswordToken('token', $now->modify('+1 day'));
         $user->requestPasswordReset($oldToken, $now);
@@ -59,6 +59,18 @@ class RequestTest extends TestCase
         $now = new DateTimeImmutable();
         $token = new ResetPasswordToken('token', $now->modify('+1 day'));
         $user = (new UserFactory())->create();
+
+        $this->expectException(DomainException::class);
+
+        $user->requestPasswordReset($token, $now);
+    }
+
+    /** @test */
+    public function it_throws_an_exception_when_user_is_not_confirmed(): void
+    {
+        $now = new DateTimeImmutable();
+        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
+        $user = (new UserFactory())->byEmail()->create();
 
         $this->expectException(DomainException::class);
 

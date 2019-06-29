@@ -17,7 +17,7 @@ class ResetTest extends TestCase
     {
         $now = new DateTimeImmutable();
         $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = (new UserFactory())->byEmail()->create();
+        $user = (new UserFactory())->byEmail()->confirmed()->create();
 
         $user->requestPasswordReset($token, $now->modify('+1 day'));
 
@@ -32,7 +32,7 @@ class ResetTest extends TestCase
     {
         $now = new DateTimeImmutable();
         $token = new ResetPasswordToken('token', $now);
-        $user = (new UserFactory())->byEmail()->create();
+        $user = (new UserFactory())->byEmail()->confirmed()->create();
 
         $user->requestPasswordReset($token, $now);
 
@@ -45,7 +45,7 @@ class ResetTest extends TestCase
     public function it_throws_an_exception_if_token_has_not_been_requests(): void
     {
         $now = new DateTimeImmutable();
-        $user = (new UserFactory())->byEmail()->create();
+        $user = (new UserFactory())->byEmail()->confirmed()->create();
 
         $this->expectException(DomainException::class);
 

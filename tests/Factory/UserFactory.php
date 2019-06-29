@@ -14,12 +14,20 @@ class UserFactory
     private $token;
     private $socialNetwork;
     private $identity;
+    private $confirmed = false;
 
     public function byEmail(Email $email = null, string $password = null, string $token = null): self
     {
         $this->email = $email ?? new Email('example@mail.com');
         $this->password = $password ?? 'secret-hash';
         $this->token = $token ?? 'token';
+
+        return $this;
+    }
+
+    public function confirmed(): self
+    {
+        $this->confirmed = true;
 
         return $this;
     }
@@ -38,6 +46,10 @@ class UserFactory
 
         if ($this->email) {
             $user->signUpByEmail($this->email, $this->password, $this->token);
+
+            if ($this->confirmed) {
+                $user->confirmSignUp();
+            }
         }
 
         if ($this->socialNetwork) {
