@@ -12,6 +12,7 @@ use App\Model\User\Entity\User\UserRepository;
 use App\Model\User\Service\ConfirmTokenizer;
 use App\Model\User\Service\ConfirmTokenSender;
 use App\Model\User\Service\PasswordHasher;
+use DateTimeImmutable;
 use DomainException;
 
 class Handler
@@ -62,13 +63,9 @@ class Handler
 
         $token = $this->tokenizer->generate();
 
-        $user = User::signUpByEmail(
-            Id::next(),
-            $email,
-            $this->hasher->hash($command->password),
-            new \DateTimeImmutable(),
-            $token
-        );
+        $user = new User(Id::next(), new DateTimeImmutable());
+
+        $user->signUpByEmail($email, $this->hasher->hash($command->password), $token);
 
         $this->users->add($user);
 

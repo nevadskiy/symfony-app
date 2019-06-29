@@ -8,6 +8,7 @@ use App\Model\User\Entity\User\Email;
 use App\Model\User\Entity\User\Id;
 use App\Model\User\Entity\User\User;
 use DateTimeImmutable;
+use DomainException;
 use PHPUnit\Framework\TestCase;
 
 class RequestTest extends TestCase
@@ -15,11 +16,14 @@ class RequestTest extends TestCase
     /** @test */
     public function it_creates_successfully(): void
     {
-        $user = User::signUpByEmail(
+        $user = new User(
             $id = Id::next(),
-            $email = new Email('test@mail.com'),
+            $registerDate = new DateTimeImmutable()
+        );
+
+        $user->signUpByEmail(
+            $email = new Email('example@mail.com'),
             $password = 'secret',
-            $registerDate = new DateTimeImmutable(),
             $token = 'token'
         );
 
@@ -31,5 +35,17 @@ class RequestTest extends TestCase
         self::assertEquals($password, $user->getPasswordHash());
         self::assertEquals($registerDate, $user->getRegisterDate());
         self::assertEquals($token, $user->getConfirmToken());
+    }
+
+    /** @test */
+    public function it_throws_an_exception_when_user_already_signed_up(): void
+    {
+        $user = new User(Id::next(), new DateTimeImmutable());
+
+        $user->signUpByEmail(new Email('example@mail.com'), 'secret', 'token');
+
+        $this->expectException(DomainException::class);
+
+        $user->signUpByEmail(new Email('example@mail.com'), 'secret', 'token');
     }
 }

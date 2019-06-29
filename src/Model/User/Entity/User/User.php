@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Model\User\Entity\User;
 
 use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
 use DomainException;
 
 class User
 {
+    private const STATUS_NEW = 'new';
     private const STATUS_WAIT = 'wait';
     private const STATUS_ACTIVE = 'active';
 
@@ -23,7 +25,7 @@ class User
     /**
      * @var string
      */
-    private $password;
+    private $passwordHash;
     /**
      * @var DateTimeImmutable
      */
@@ -36,47 +38,52 @@ class User
      * @var string
      */
     private $status;
+    /**
+     * @var ArrayCollection
+     */
+    private $socialNetworks;
 
-    private function __construct(Id $id, DateTimeImmutable $registerDate)
+    public function __construct(Id $id, DateTimeImmutable $registerDate)
     {
         $this->id = $id;
         $this->registerDate = $registerDate;
+        $this->status = self::STATUS_NEW;
+        $this->socialNetworks = new ArrayCollection();
     }
 
-    public static function signUpByEmail(
-        Id $id,
-        Email $email,
-        string $password,
-        DateTimeImmutable $registerDate,
-        string $confirmToken
-    ): self
+    public function signUpByEmail(Email $email, string $passwordHash, string $confirmToken): void
     {
-        $user = new self($id, $registerDate);
+        $this->checkRegistration();
 
-        $user->email = $email;
-        $user->password = $password;
-        $user->confirmToken = $confirmToken;
-        $user->status = self::STATUS_WAIT;
-
-        return $user;
+        $this->email = $email;
+        $this->passwordHash = $passwordHash;
+        $this->confirmToken = $confirmToken;
+        $this->status = self::STATUS_WAIT;
     }
 
-    public static function signUpBySocialNetwork(
-        Id $id,
-        Email $email,
-        string $password,
-        DateTimeImmutable $registerDate,
-        string $confirmToken
-    ): self
+    public function signUpBySocialNetwork(string $socialNetwork, string $identity): void
     {
-        $user = new self($id, $registerDate);
+        $this->checkRegistration();
 
-        $user->email = $email;
-        $user->password = $password;
-        $user->confirmToken = $confirmToken;
-        $user->status = self::STATUS_WAIT;
+        $this->attachNetwork($socialNetwork, $identity);
+        $this->status = self::STATUS_ACTIVE;
+    }
 
-        return $user;
+    private function attachNetwork(string $network, string $identity): void
+    {
+        /** @var SocialNetwork $n */
+        foreach ($this->socialNetworks as $n) {
+            if ($n->hasName($network)) {
+                throw new DomainException('Social network is already attached.');
+            }
+        }
+
+        $this->socialNetworks->add(new SocialNetwork($this, $network, $identity));
+    }
+
+    public function isNew(): bool
+    {
+        return $this->status === self::STATUS_NEW;
     }
 
     public function isWait(): bool
@@ -101,7 +108,7 @@ class User
 
     public function getPasswordHash(): string
     {
-        return $this->password;
+        return $this->passwordHash;
     }
 
     public function getRegisterDate(): DateTimeImmutable
@@ -116,11 +123,30 @@ class User
 
     public function confirmSignUp(): void
     {
+        if ($this->isNew()) {
+            throw new DomainException('User creation in the process');
+        }
+
         if ($this->isActive()) {
             throw new DomainException('User is already confirmed');
         }
 
         $this->status = self::STATUS_ACTIVE;
         $this->confirmToken = null;
+    }
+
+    private function checkRegistration(): void
+    {
+        if (!$this->isNew()) {
+            throw new DomainException('User is not fully register yet.');
+        }
+    }
+
+    /**
+     * @return SocialNetwork[]
+     */
+    public function getSocialNetworks(): array
+    {
+        return $this->socialNetworks->toArray();
     }
 }

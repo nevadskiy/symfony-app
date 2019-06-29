@@ -40,12 +40,10 @@ class ConfirmTest extends TestCase
 
     private function makeSignedUpUser(): User
     {
-        return User::signUpByEmail(
-            Id::next(),
-            new Email('test@mail.com'),
-            'secret',
-            new DateTimeImmutable(),
-            'token'
-        );
+        $user = new User(Id::next(), new DateTimeImmutable());
+
+        $user->signUpByEmail(new Email('example@mail.com'), 'secret', 'token');
+
+        return $user;
     }
 }
