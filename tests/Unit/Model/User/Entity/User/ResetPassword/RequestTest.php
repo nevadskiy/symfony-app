@@ -54,18 +54,6 @@ class RequestTest extends TestCase
     }
 
     /** @test */
-    public function it_throws_an_exception_when_user_is_signed_up_without_email(): void
-    {
-        $now = new DateTimeImmutable();
-        $token = new ResetPasswordToken('token', $now->modify('+1 day'));
-        $user = (new UserFactory())->create();
-
-        $this->expectException(DomainException::class);
-
-        $user->requestPasswordReset($token, $now);
-    }
-
-    /** @test */
     public function it_throws_an_exception_when_user_is_not_confirmed(): void
     {
         $now = new DateTimeImmutable();

@@ -6,6 +6,7 @@ use App\Model\User\Entity\User\Email;
 use App\Model\User\Entity\User\Id;
 use App\Model\User\Entity\User\User;
 use DateTimeImmutable;
+use RuntimeException;
 
 class UserFactory
 {
@@ -42,20 +43,33 @@ class UserFactory
 
     public function create(): User
     {
-        $user = new User(Id::next(), new DateTimeImmutable());
-
         if ($this->email) {
-            $user->signUpByEmail($this->email, $this->password, $this->token);
+            $user = User::signUpByEmail(
+                Id::next(),
+                new DateTimeImmutable(),
+                $this->email,
+                $this->password,
+                $this->token
+            );
 
             if ($this->confirmed) {
                 $user->confirmSignUp();
             }
+
+            return $user;
         }
 
         if ($this->socialNetwork) {
-            $user->signUpBySocialNetwork($this->socialNetwork, $this->identity);
+            $user = User::signUpBySocialNetwork(
+                Id::next(),
+                new DateTimeImmutable(),
+                $this->socialNetwork,
+                $this->identity
+            );
+
+            return $user;
         }
 
-        return $user;
+        throw new RuntimeException('User factory method is not specified');
     }
 }

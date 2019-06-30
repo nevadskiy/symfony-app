@@ -36,9 +36,12 @@ class Handler
             throw new DomainException('User already exists');
         }
 
-        $user = new User(Id::next(), new DateTimeImmutable());
-
-        $user->signUpBySocialNetwork($command->network, $command->identity);
+        $user = User::signUpBySocialNetwork(
+            Id::next(),
+            new DateTimeImmutable(),
+            $command->network,
+            $command->identity
+        );
 
         $this->users->add($user);
 

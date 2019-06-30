@@ -10,7 +10,6 @@ use DomainException;
 
 class User
 {
-    private const STATUS_NEW = 'new';
     private const STATUS_WAIT = 'wait';
     private const STATUS_ACTIVE = 'active';
 
@@ -47,30 +46,44 @@ class User
      */
     private $resetPasswordToken;
 
-    public function __construct(Id $id, DateTimeImmutable $registerDate)
+    private function __construct(Id $id, DateTimeImmutable $registerDate)
     {
         $this->id = $id;
         $this->registerDate = $registerDate;
-        $this->status = self::STATUS_NEW;
         $this->socialNetworks = new ArrayCollection();
     }
 
-    public function signUpByEmail(Email $email, string $passwordHash, string $confirmToken): void
+    public static function signUpByEmail(
+        Id $id,
+        DateTimeImmutable $registerDate,
+        Email $email,
+        string $passwordHash,
+        string $confirmToken
+    ): self
     {
-        $this->checkRegistration();
+        $user = new self($id, $registerDate);
 
-        $this->email = $email;
-        $this->passwordHash = $passwordHash;
-        $this->confirmToken = $confirmToken;
-        $this->status = self::STATUS_WAIT;
+        $user->email = $email;
+        $user->passwordHash = $passwordHash;
+        $user->confirmToken = $confirmToken;
+        $user->status = self::STATUS_WAIT;
+
+        return $user;
     }
 
-    public function signUpBySocialNetwork(string $socialNetwork, string $identity): void
+    public static function signUpBySocialNetwork(
+        Id $id,
+        DateTimeImmutable $registerDate,
+        string $socialNetwork,
+        string $identity
+    ): self
     {
-        $this->checkRegistration();
+        $user = new self($id, $registerDate);
 
-        $this->attachNetwork($socialNetwork, $identity);
-        $this->status = self::STATUS_ACTIVE;
+        $user->attachNetwork($socialNetwork, $identity);
+        $user->status = self::STATUS_ACTIVE;
+
+        return $user;
     }
 
     private function attachNetwork(string $network, string $identity): void
@@ -83,11 +96,6 @@ class User
         }
 
         $this->socialNetworks->add(new SocialNetwork($this, $network, $identity));
-    }
-
-    public function isNew(): bool
-    {
-        return $this->status === self::STATUS_NEW;
     }
 
     public function isWait(): bool
@@ -127,23 +135,12 @@ class User
 
     public function confirmSignUp(): void
     {
-        if ($this->isNew()) {
-            throw new DomainException('User creation in the process');
-        }
-
         if ($this->isActive()) {
             throw new DomainException('User is already confirmed');
         }
 
         $this->status = self::STATUS_ACTIVE;
         $this->confirmToken = null;
-    }
-
-    private function checkRegistration(): void
-    {
-        if (!$this->isNew()) {
-            throw new DomainException('User is not fully register yet.');
-        }
     }
 
     /**
