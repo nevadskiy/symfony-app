@@ -7,7 +7,16 @@ namespace App\Model\User\Entity\User;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use DomainException;
+use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\HasLifecycleCallbacks()
+ * @ORM\Table(name="user_users", uniqueConstraints={
+ *     @ORM\UniqueConstraint(columns={"email"}),
+ *     @ORM\UniqueConstraint(columns={"reset_password_token"}),
+ * })
+ */
 class User
 {
     private const STATUS_WAIT = 'wait';
@@ -15,40 +24,50 @@ class User
 
     /**
      * @var Id
+     * @ORM\Column(type="user_user_id")
+     * @ORM\Id
      */
     private $id;
     /**
      * @var Email
+     * @ORM\Column(type="user_user_email", nullable=true)
      */
     private $email;
     /**
      * @var string
+     * @ORM\Column(type="string", nullable=true, name="password_hash")
      */
     private $passwordHash;
     /**
      * @var DateTimeImmutable
+     * @ORM\Column(type="datetime_immutable", name="register_date")
      */
     private $registerDate;
     /**
      * @var string
+     * @ORM\Column(type="string", nullable=true, name="confirm_token")
      */
     private $confirmToken;
     /**
      * @var string
+     * @ORM\Column(type="string", length=16)
      */
     private $status;
     /**
-     * @var ArrayCollection
-     */
-    private $socialNetworks;
-    /**
-     * @var ResetPasswordToken
+     * @var ResetPasswordToken|null
+     * @ORM\Embedded(class="ResetPasswordToken", columnPrefix="reset_password_")
      */
     private $resetPasswordToken;
     /**
      * @var Role
+     * @ORM\Column(type="user_user_role")
      */
     private $role;
+    /**
+     * @var SocialNetwork[], ArrayCollection
+     * @ORM\OneToMany(targetEntity="SocialNetwork", mappedBy="user", orphanRemoval=true, cascade={"persist"})
+     */
+    private $socialNetworks;
 
     private function __construct(Id $id, DateTimeImmutable $registerDate)
     {
@@ -148,14 +167,6 @@ class User
         $this->confirmToken = null;
     }
 
-    /**
-     * @return SocialNetwork[]
-     */
-    public function getSocialNetworks(): array
-    {
-        return $this->socialNetworks->toArray();
-    }
-
     public function requestPasswordReset(ResetPasswordToken $token, DateTimeImmutable $date): void
     {
         if (!$this->isActive()) {
@@ -203,5 +214,23 @@ class User
     public function getRole(): Role
     {
         return $this->role;
+    }
+
+    /**
+     * @return SocialNetwork[]
+     */
+    public function getSocialNetworks(): array
+    {
+        return $this->socialNetworks->toArray();
+    }
+
+    /**
+     * @ORM\PostLoad()
+     */
+    public function checkEmbeds(): void
+    {
+        if ($this->resetPasswordToken->isEmpty()) {
+            $this->resetPasswordToken = null;
+        }
     }
 }

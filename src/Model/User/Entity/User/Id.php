@@ -34,4 +34,9 @@ class Id
     {
         Assert::notEmpty($value);
     }
+
+    public function __toString(): string
+    {
+        return $this->getValue();
+    }
 }

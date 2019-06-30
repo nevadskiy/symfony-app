@@ -5,25 +5,38 @@ declare(strict_types=1);
 namespace App\Model\User\Entity\User;
 
 use Ramsey\Uuid\Uuid;
+use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="user_social_networks", uniqueConstraints={
+ *     @ORM\UniqueConstraint(columns={"name", "identity"})
+ * })
+ */
 class SocialNetwork
 {
     /**
      * @var string
+     * @ORM\Column(type="guid")
+     * @ORM\Id
      */
     private $id;
     /**
-     * @var User
-     */
-    private $user;
-    /**
      * @var string
+     * @ORM\Column(type="string", length=32, nullable=true)
      */
     private $name;
     /**
      * @var string
+     * @ORM\Column(type="string", length=32, nullable=true)
      */
     private $identity;
+    /**
+     * @var User
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="socialNetworks")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
+     */
+    private $user;
 
     public function __construct(User $user, string $name, string $identity)
     {

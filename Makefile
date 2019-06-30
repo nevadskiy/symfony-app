@@ -46,5 +46,8 @@ test:
 migration:
 	docker-compose exec php-cli php bin/console make:migration
 
+migrations-diff:
+	docker-compose exec php-cli php bin/console doctrine:migrations:diff
+
 migrate:
 	docker-compose exec php-cli php bin/console doctrine:migration:migrate
