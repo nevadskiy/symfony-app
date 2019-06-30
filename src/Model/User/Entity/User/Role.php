@@ -6,35 +6,57 @@ namespace App\Model\User\Entity\User;
 
 use Webmozart\Assert\Assert;
 
-class Email
+class Role
 {
+    private const USER = 'ROLE_USER';
+    private const ADMIN = 'ROLE_ADMIN';
+
     /**
      * @var string
      */
-    private $value;
+    private $name;
 
-    public function __construct(string $value)
+    public function __construct(string $name)
     {
-        $this->validate($value);
-        $this->value = $this->format($value);
+        $this->validate($name);
+        $this->name = $name;
     }
 
-    public function getValue(): string
+    public static function user(): self
     {
-        return $this->value;
+        return new self(self::USER);
     }
 
-    private function validate(string $value): void
+    public static function admin(): self
     {
-        Assert::notEmpty($value);
-
-        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException('Invalid email');
-        }
+        return new self(self::ADMIN);
     }
 
-    private function format(string $value): string
+    public function isUser(): bool
     {
-        return mb_strtolower($value);
+        return $this->name === self::USER;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->name === self::ADMIN;
+    }
+
+    public function isEqualTo(Role $role): bool
+    {
+        return $this->getName() === $role->getName();
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    private function validate(string $name): void
+    {
+        Assert::oneOf($name, [
+            self::USER,
+            self::ADMIN
+        ]);
     }
 }

@@ -45,11 +45,16 @@ class User
      * @var ResetPasswordToken
      */
     private $resetPasswordToken;
+    /**
+     * @var Role
+     */
+    private $role;
 
     private function __construct(Id $id, DateTimeImmutable $registerDate)
     {
         $this->id = $id;
         $this->registerDate = $registerDate;
+        $this->role = Role::user();
         $this->socialNetworks = new ArrayCollection();
     }
 
@@ -184,5 +189,19 @@ class User
         }
 
         $this->passwordHash = $passwordHash;
+    }
+
+    public function changeRole(Role $role): void
+    {
+        if ($this->role->isEqualTo($role)) {
+            throw new DomainException('Role is already set');
+        }
+
+        $this->role = $role;
+    }
+
+    public function getRole(): Role
+    {
+        return $this->role;
     }
 }
