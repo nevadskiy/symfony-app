@@ -26,5 +26,12 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Model\User\Service\SignUpConfirmTokenSender"
+    App\Model\User\Service\SignUpConfirmTokenSender:
         $from: {'%env(MAILER_FROM_EMAIL)%': '%env(MAILER_FROM_NAME)%'}
+
+    App\Model\User\Service\ResetPasswordTokenSender:
+        $from: {'%env(MAILER_FROM_EMAIL)%': '%env(MAILER_FROM_NAME)%'}
+
+    App\Model\User\Service\ResetPasswordTokenizer:
+        factory: 'App\Model\User\Service\ResetPasswordTokenizerFactory:create'
+        arguments: ['PT1H'] # +1 hour

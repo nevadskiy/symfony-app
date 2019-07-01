@@ -6,6 +6,7 @@ namespace App\Model\User\Service;
 
 use App\Model\User\Entity\User\Email;
 use RuntimeException;
+use Swift_Mailer;
 use Swift_Message;
 use Twig\Environment;
 
@@ -15,7 +16,7 @@ class SignUpConfirmTokenSender
     private $twig;
     private $from;
 
-    public function __construct(\Swift_Mailer $mailer, Environment $twig, array $from)
+    public function __construct(Swift_Mailer $mailer, Environment $twig, array $from)
     {
         $this->mailer = $mailer;
         $this->twig = $twig;
