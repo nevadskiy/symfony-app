@@ -30,7 +30,7 @@ class Handler
 
     public function handle(Command $command): void
     {
-        $user = $this->users->hasByNetworkIdentity($command->network, $command->identity);
+        $user = $this->users->hasBySocialNetworkIdentity($command->network, $command->identity);
 
         if ($user) {
             throw new DomainException('User already exists');
