@@ -1,12 +1,12 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Password Reset{% endblock %}
 
 {% block body %}
-    <h1>Sign Up</h1>
+    <h1>Password Reset</h1>
 
     {{ form_start(form) }}
         {{ form_widget(form) }}
-        <button class="btn btn-primary">Sign up</button>
+        <button type="submit" class="btn btn-primary">Reset</button>
     {{ form_end(form) }}
 {% endblock %}
