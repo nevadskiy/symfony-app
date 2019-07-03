@@ -50,7 +50,7 @@ class ResetPasswordController extends AbstractController
             }
         }
 
-        return $this->render('app/auth/reset/request.html.twig', [
+        return $this->render('app/auth/reset-password/request.html.twig', [
             'form' => $form->createView(),
         ]);
     }
@@ -71,7 +71,7 @@ class ResetPasswordController extends AbstractController
         UserFetcher $users
     ): Response
     {
-        if ($users->existsByResetPasswordToken($token)) {
+        if (!$users->existsByResetPasswordToken($token)) {
             $this->addFlash('error', 'Incorrect or already confirmed token.');
             return $this->redirectToRoute('home');
         }
@@ -86,14 +86,14 @@ class ResetPasswordController extends AbstractController
                 $handler->handle($command);
                 $this->addFlash('success', 'Password is successfully changed.');
 
-                return $this->redirectToRoute('/');
+                return $this->redirectToRoute('home');
             } catch (DomainException $e) {
                 $this->logger->error($e->getMessage(), ['exception' => $e]);
                 $this->addFlash('error', $e->getMessage());
             }
         }
 
-        return $this->render('app/auth/reset/reset.html.twig', [
+        return $this->render('app/auth/reset-password/reset.html.twig', [
             'form' => $form->createView(),
         ]);
     }

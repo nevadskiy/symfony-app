@@ -23,6 +23,9 @@ services:
     environment:
       XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
       PHP_IDE_CONFIG: "serverName=Docker"
+    depends_on:
+      - postgres
+      - mailer
     networks:
       - internal
 
@@ -34,6 +37,9 @@ services:
       - ./:/app
       - composer:/root/.composer/cache
     tty: true
+    depends_on:
+      - postgres
+      - mailer
     networks:
       - internal
 
@@ -47,6 +53,13 @@ services:
       POSTGRES_DB: app
     ports:
       - 54321:5432
+    networks:
+      - internal
+
+  mailer:
+    image: mailhog/mailhog
+    ports:
+      - 8026:8025
     networks:
       - internal
 

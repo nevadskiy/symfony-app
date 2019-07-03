@@ -32,7 +32,7 @@ class SignUpConfirmTokenSender
                 'token' => $token
             ]), 'text/html');
 
-        $success = !$this->mailer->send($message);
+        $success = $this->mailer->send($message);
 
         if (!$success) {
             throw new RuntimeException('Unable to send email');

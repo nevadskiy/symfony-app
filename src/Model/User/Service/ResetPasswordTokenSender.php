@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Model\User\Service;
 
 use App\Model\User\Entity\User\Email;
+use App\Model\User\Entity\User\ResetPasswordToken;
 use RuntimeException;
 use Swift_Mailer;
 use Swift_Message;
@@ -23,16 +24,16 @@ class ResetPasswordTokenSender
         $this->from = $from;
     }
 
-    public function send(Email $email, string $token): void
+    public function send(Email $email, ResetPasswordToken $token): void
     {
         $message = (new Swift_Message('Reset your password'))
             ->setFrom($this->from)
             ->setTo($email->getValue())
             ->setBody($this->twig->render('mail/user/reset-password.html.twig', [
-                'token' => $token
+                'token' => $token->getToken()
             ]), 'text/html');
 
-        $success = !$this->mailer->send($message);
+        $success = $this->mailer->send($message);
 
         if (!$success) {
             throw new RuntimeException('Unable to send email');
