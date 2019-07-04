@@ -52,5 +52,8 @@ migrations-diff:
 migrate:
 	docker-compose exec php-cli php bin/console doctrine:migration:migrate --no-interaction
 
+fixtures-load:
+	docker-compose exec php-cli php bin/console doctrine:fixtures:load --no-interaction
+
 wait-postgres:
 	until docker-compose exec postgres pg_isready --timeout=0 --dbname=app ; do sleep 1 ; done
