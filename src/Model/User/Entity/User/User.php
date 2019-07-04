@@ -20,7 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
 class User
 {
     private const STATUS_WAIT = 'wait';
-    private const STATUS_ACTIVE = 'active';
+    public const STATUS_ACTIVE = 'active';
 
     /**
      * @var Id

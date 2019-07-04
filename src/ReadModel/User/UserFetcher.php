@@ -30,7 +30,7 @@ class UserFetcher
     public function findForAuth(string $email): ?AuthView
     {
         $statement = $this->connection->createQueryBuilder()
-            ->select('id', 'email', 'password_hash', 'role')
+            ->select('id', 'email', 'password_hash', 'role', 'status')
             ->from('user_users')
             ->where('email = :email')
             ->setParameter(':email', $email)
