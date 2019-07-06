@@ -37,8 +37,29 @@ class UserFetcher
             ->execute();
 
         $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, AuthView::class);
-        $result = $statement->fetch();
 
-        return $result ?: null;
+        return $statement->fetch() ?: null;
+    }
+
+    public function findForAuthBySocialNetwork(string $socialNetwork, string $identity): ?AuthView
+    {
+        $statement = $this->connection->createQueryBuilder()
+            ->select([
+                'u.id',
+                'u.email',
+                'u.password_hash',
+                'u.role',
+                'u.status',
+            ])
+            ->from('user_users', 'u')
+            ->innerJoin('u', 'user_user_networks', 'n', 'n.user_id = u.id')
+            ->where('n.name = :name AND n.identity = :identity')
+            ->setParameter(':name', $socialNetwork)
+            ->setParameter(':identity', $identity)
+            ->execute();
+
+        $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, AuthView::class);
+
+        return $statement->fetch() ?: null;
     }
 }

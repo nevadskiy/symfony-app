@@ -22,7 +22,7 @@ class UserProvider implements UserProviderInterface
     public function loadUserByUsername($username): UserInterface
     {
         return $this->makeIdentityUser(
-            $this->loadUser($username)
+            $this->loadUser($username), $username
         );
     }
 
@@ -33,7 +33,7 @@ class UserProvider implements UserProviderInterface
         }
 
         return $this->makeIdentityUser(
-            $this->loadUser($identity->getUsername())
+            $this->loadUser($identity->getUsername()), $identity->getUsername()
         );
     }
 
@@ -44,23 +44,42 @@ class UserProvider implements UserProviderInterface
 
     private function loadUser(string $username): AuthView
     {
-        $user = $this->users->findForAuth($username);
+        $user = $this->loadUserFromSocialNetwork($username);
 
-        if (!$user) {
-            throw new UsernameNotFoundException('');
+        if ($user) {
+            return $user;
         }
 
-        return $user;
+        $user = $this->users->findForAuth($username);
+
+        if ($user) {
+            return $user;
+        }
+
+        throw new UsernameNotFoundException('');
     }
 
-    private function makeIdentityUser(AuthView $user): UserIdentity
+    private function makeIdentityUser(AuthView $user, string $username): UserIdentity
     {
         return new UserIdentity(
             $user->id,
-            $user->email,
-            $user->password_hash,
+            $username,
+            $user->password_hash ?: '',
             $user->role,
             $user->status
         );
+    }
+
+    private function loadUserFromSocialNetwork(string $username): ?AuthView
+    {
+        $chunks = explode(':', $username);
+
+        if (\count($chunks) !== 2) {
+            return null;
+        }
+
+        [$socialNetwork, $identity] = $chunks;
+
+        return $this->users->findForAuthBySocialNetwork($socialNetwork, $identity);
     }
 }
