@@ -63,6 +63,13 @@ services:
     networks:
       - internal
 
+  node:
+    image: node:11.13-alpine
+    volumes:
+      - ./:/app
+    working_dir: /app
+    tty: true
+
 volumes:
   postgres:
     driver: local

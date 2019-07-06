@@ -2,7 +2,7 @@ up:
 	docker-compose up -d
 
 down:
-	docker-compose down --remove-orphans
+	docker-compose down
 
 restart: down up
 
@@ -57,3 +57,6 @@ fixtures-load:
 
 wait-postgres:
 	until docker-compose exec postgres pg_isready --timeout=0 --dbname=app ; do sleep 1 ; done
+
+assets-install:
+	docker-compose exec node yarn install

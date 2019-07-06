@@ -14,8 +14,7 @@ security:
         authenticators:
           - App\Security\LoginFormAuthenticator
           - App\Security\OAuth\FacebookAuthenticator
-          entry_point: App\Security\LoginFormAuthenticator
-
+        entry_point: App\Security\LoginFormAuthenticator
       remember_me:
         secret: '%kernel.secret%'
         lifetime: 604800
