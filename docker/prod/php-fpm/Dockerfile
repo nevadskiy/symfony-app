@@ -1,5 +1,5 @@
 # Base builder image with all build dependencies (zip, composer, etc)
-FROM php:7.2-fpm AS builder
+FROM php:7.2-fpm AS php-builder
 
 # Update dependencies
 RUN apt-get update
@@ -23,6 +23,21 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
 ###########################################################################################
 
+FROM node:11.13-alpine AS node-builder
+
+WORKDIR /app
+
+COPY ./package.json ./
+COPY ./yarn.lock ./
+
+RUN yarn install && npm rebuild node-sass
+
+COPY ./ ./
+
+RUN npm run build
+
+###########################################################################################
+
 # PHP-FPM build (separate build that does not have composer and only build dependencies)
 FROM php:7.2-fpm
 
@@ -38,7 +53,14 @@ COPY ./default.ini /usr/local/etc/php/conf.d/default.ini
 # Set up working directory
 WORKDIR /app
 
-COPY --from=builder /app ./
-
 # Copy all project files inside built image
-COPY ./../../../ ./
+COPY --from=php-builder /app ./
+COPY --from=node-builder /app/public/build ./public/build
+COPY ./ ./
+
+ENV APP_ENV prod
+
+RUN php bin/console assets:install
+
+RUN php bin/console cache:warmup
+RUN chown -R www-data:www-data ./var
