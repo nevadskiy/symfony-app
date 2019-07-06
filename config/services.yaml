@@ -35,3 +35,11 @@ services:
     App\Model\User\Service\ResetPasswordTokenizer:
         factory: 'App\Model\User\Service\ResetPasswordTokenizerFactory:create'
         arguments: ['PT1H'] # +1 hour
+
+    Predis\Client:
+        arguments:
+            - '%env(REDIS_URL)%'
+
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+        arguments:
+            - '@Predis\Client'

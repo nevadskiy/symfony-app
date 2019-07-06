@@ -1,92 +1,104 @@
 version: '3'
 
 services:
-  nginx:
-    build:
-      context: docker/dev/nginx
-      dockerfile: Dockerfile
-    volumes:
-      - ./:/app
-    ports:
-      - 8080:80
-    depends_on:
-      - php-fpm
-    networks:
-      - internal
+    nginx:
+        build:
+            context: docker/dev/nginx
+            dockerfile: Dockerfile
+        volumes:
+            - ./:/app
+        ports:
+            - 8080:80
+        depends_on:
+            - php-fpm
+            - redis
+        networks:
+            - internal
 
-  php-fpm:
-    build:
-      context: docker/dev/php-fpm
-      dockerfile: Dockerfile
-    volumes:
-      - ./:/app
-    environment:
-      XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
-      PHP_IDE_CONFIG: "serverName=Docker"
-    depends_on:
-      - postgres
-      - mailer
-    networks:
-      - internal
+    php-fpm:
+        build:
+            context: docker/dev/php-fpm
+            dockerfile: Dockerfile
+        volumes:
+            - ./:/app
+        environment:
+            XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
+            PHP_IDE_CONFIG: "serverName=Docker"
+        depends_on:
+            - postgres
+            - mailer
+            - redis
+        networks:
+            - internal
 
-  php-cli:
-    build:
-      context: docker/dev/php-cli
-      dockerfile: Dockerfile
-    volumes:
-      - ./:/app
-      - composer:/root/.composer/cache
-    tty: true
-    depends_on:
-      - postgres
-      - mailer
-    networks:
-      - internal
+    php-cli:
+        build:
+            context: docker/dev/php-cli
+            dockerfile: Dockerfile
+        volumes:
+            - ./:/app
+            - composer:/root/.composer/cache
+        tty: true
+        depends_on:
+            - postgres
+            - mailer
+            - redis
+        networks:
+            - internal
 
-  postgres:
-    image: postgres:11.2-alpine
-    volumes:
-      - postgres:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: app
-    ports:
-      - 54321:5432
-    networks:
-      - internal
+    postgres:
+        image: postgres:11.2-alpine
+        volumes:
+            - postgres:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: app
+            POSTGRES_PASSWORD: secret
+            POSTGRES_DB: app
+        ports:
+            - 54321:5432
+        networks:
+            - internal
 
-  mailer:
-    image: mailhog/mailhog
-    ports:
-      - 8026:8025
-    networks:
-      - internal
+    redis:
+        image: redis:3.0-alpine
+        volumes:
+            - redis:/data
+        networks:
+            - internal
 
-  node:
-    image: node:11.13-alpine
-    volumes:
-      - ./:/app
-    working_dir: /app
-    tty: true
+    mailer:
+        image: mailhog/mailhog
+        ports:
+            - 8026:8025
+        networks:
+            - internal
 
-  node-watcher:
-    image: node:11.13-alpine
-    volumes:
-      - ./:/app
-    working_dir: /app
-    command: sh -c "yarn install && yarn watch"
+    node:
+        image: node:11.13-alpine
+        volumes:
+            - ./:/app
+        working_dir: /app
+        tty: true
+
+    node-watcher:
+        image: node:11.13-alpine
+        volumes:
+            - ./:/app
+        working_dir: /app
+        command: sh -c "yarn install && yarn watch"
 
 volumes:
-  postgres:
-    driver: local
-  composer:
-    driver: local
+    postgres:
+        driver: local
+    redis:
+        driver: local
+    composer:
+        driver: local
 
 networks:
-  internal:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 192.168.220.0/28
+    internal:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 192.168.220.0/28
