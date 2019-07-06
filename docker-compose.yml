@@ -70,6 +70,13 @@ services:
     working_dir: /app
     tty: true
 
+  node-watcher:
+    image: node:11.13-alpine
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: sh -c "yarn install && yarn watch"
+
 volumes:
   postgres:
     driver: local

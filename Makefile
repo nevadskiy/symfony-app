@@ -60,3 +60,6 @@ wait-postgres:
 
 assets-install:
 	docker-compose exec node yarn install
+
+assets-build:
+	docker-compose exec node yarn dev
