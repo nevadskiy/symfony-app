@@ -19,12 +19,12 @@ class UserFetcher
     public function existsByResetPasswordToken($token): bool
     {
         return $this->connection->createQueryBuilder()
-            ->select('COUNT (*)')
-            ->from('user_users')
-            ->where('reset_password_token = :token')
-            ->setParameter(':token', $token)
-            ->execute()
-            ->fetchColumn(0) > 0;
+                ->select('COUNT (*)')
+                ->from('user_users')
+                ->where('reset_password_token = :token')
+                ->setParameter(':token', $token)
+                ->execute()
+                ->fetchColumn(0) > 0;
     }
 
     public function findForAuth(string $email): ?AuthView
@@ -66,12 +66,7 @@ class UserFetcher
     public function findByEmail(string $email): ?ShortView
     {
         $statement = $this->connection->createQueryBuilder()
-            ->select(
-                'id',
-                'email',
-                'role',
-                'status'
-            )
+            ->select('id', 'email', 'role', 'status')
             ->from('user_users')
             ->where('email = :email')
             ->setParameter(':email', $email)
@@ -80,5 +75,33 @@ class UserFetcher
         $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, ShortView::class);
 
         return $statement->fetch() ?: null;
+    }
+
+    public function findDetails(string $id): ?DetailsView
+    {
+        $statement = $this->connection->createQueryBuilder()
+            ->select('id', 'register_date', 'email', 'role', 'status')
+            ->from('user_users')
+            ->where('id = :id')
+            ->setParameter(':id', $id)
+            ->execute();
+
+        $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, DetailsView::class);
+
+        /** @var DetailsView $view */
+        $view = $statement->fetch();
+
+        $statement = $this->connection->createQueryBuilder()
+            ->select('name', 'identity')
+            ->from('user_social_networks')
+            ->where('user_id = :id')
+            ->setParameter(':id', $id)
+            ->execute();
+
+        $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, SocialNetworkView::class);
+
+        $view->socialNetworks = $statement->fetchAll();
+
+        return $view;
     }
 }
