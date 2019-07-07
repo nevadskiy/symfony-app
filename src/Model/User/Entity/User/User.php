@@ -49,6 +49,16 @@ class User
      */
     private $confirmToken;
     /**
+     * @var Email|null
+     * @ORM\Column(type="user_user_email", name="new_email", nullable=true)
+     */
+    private $newEmail;
+    /**
+     * @var string|null
+     * @ORM\Column(type="string", name="new_email_token", nullable=true)
+     */
+    private $newEmailToken;
+    /**
      * @var string
      * @ORM\Column(type="string", length=16)
      */
@@ -110,7 +120,7 @@ class User
         return $user;
     }
 
-    private function attachNetwork(string $network, string $identity): void
+    public function attachNetwork(string $network, string $identity): void
     {
         /** @var SocialNetwork $n */
         foreach ($this->socialNetworks as $n) {
@@ -200,6 +210,45 @@ class User
         }
 
         $this->passwordHash = $passwordHash;
+    }
+
+    public function requestEmailChanging(Email $email, string $token): void
+    {
+        if (!$this->isActive()) {
+            throw new DomainException('User is not active.');
+        }
+
+        if ($this->email && $this->email->isEqual($email)) {
+            throw new DomainException('Email is already same.');
+        }
+
+        $this->newEmail = $email;
+        $this->newEmailToken = $token;
+    }
+
+    public function confirmEmailChanging(string $token): void
+    {
+        if (!$this->newEmailToken) {
+            throw new DomainException('Changing is not requested.');
+        }
+
+        if ($this->newEmailToken !== $token) {
+            throw new DomainException('Incorrect changing token.');
+        }
+
+        $this->email = $this->newEmail;
+        $this->newEmail = null;
+        $this->newEmailToken = null;
+    }
+
+    public function getNewEmail(): ?Email
+    {
+        return $this->newEmail;
+    }
+
+    public function getNewEmailToken(): ?string
+    {
+        return $this->newEmailToken;
     }
 
     public function changeRole(Role $role): void

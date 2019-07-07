@@ -43,7 +43,7 @@ class FacebookAuthenticator extends SocialAuthenticator
 
     public function getCredentials(Request $request)
     {
-        $this->fetchAccessToken($this->getFacebookClient());
+        return $this->fetchAccessToken($this->getFacebookClient());
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider): UserInterface

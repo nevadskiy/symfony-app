@@ -10,12 +10,18 @@
 {% endblock %}
 
 {% block body %}
-
     <div class="card">
         <div class="card-header">Profile</div>
         <div class="card-body">
             <table class="table table-bordered mb-0">
                 <tbody>
+                <tr>
+                    <th>Email</th>
+                    <td>
+                        {{ user.email }}
+                        <a href="{{ path('profile.email') }}" class="btn btn-sm btn-outline-primary"><span class="fa fa-pencil"></span></a>
+                    </td>
+                </tr>
                 <tr>
                     <th>ID</th>
                     <td>{{ user.id }}</td>
@@ -24,12 +30,6 @@
                     <th>Created</th>
                     <td>{{ user.register_date|date('Y-m-d H:i:s') }}</td>
                 </tr>
-                {% if user.email %}
-                    <tr>
-                        <th>Email</th>
-                        <td>{{ user.email }}</td>
-                    </tr>
-                {% endif %}
                 <tr>
                     <th>Role</th>
                     <td>{{ user_role(user.role) }}</td>
@@ -43,10 +43,10 @@
         </div>
     </div>
 
-    {% if user.socialNetworks %}
-        <div class="card">
-            <div class="card-header">Networks</div>
-            <div class="card-body">
+    <div class="card">
+        <div class="card-header">Social Networks</div>
+        <div class="card-body">
+            {% if user.socialNetworks %}
                 <table class="table table-bordered mb-0">
                     <tbody>
                     {% for socialNetwork in user.socialNetworks %}
@@ -57,8 +57,9 @@
                     {% endfor %}
                     </tbody>
                 </table>
-            </div>
-        </div>
-    {% endif %}
+            {% endif %}
 
+            <a href="{{ path('profile.oauth.facebook') }}" class="btn btn-facebook">Attach Facebook</a>
+        </div>
+    </div>
 {% endblock %}

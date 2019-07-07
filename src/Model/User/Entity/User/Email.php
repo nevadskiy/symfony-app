@@ -24,6 +24,11 @@ class Email
         return $this->value;
     }
 
+    public function isEqual(Email $email): bool
+    {
+        return $this->getValue() === $email->getValue();
+    }
+
     private function validate(string $value): void
     {
         Assert::notEmpty($value);

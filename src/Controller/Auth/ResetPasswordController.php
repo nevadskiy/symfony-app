@@ -15,9 +15,6 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ResetPasswordController extends AbstractController
 {
-    /**
-     * @var LoggerInterface
-     */
     private $logger;
 
     public function __construct(LoggerInterface $logger)
