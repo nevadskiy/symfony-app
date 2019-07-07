@@ -6,6 +6,7 @@ namespace App\ReadModel\User;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
+use LogicException;
 
 class UserFetcher
 {
@@ -80,7 +81,15 @@ class UserFetcher
     public function findDetails(string $id): ?DetailsView
     {
         $statement = $this->connection->createQueryBuilder()
-            ->select('id', 'register_date', 'email', 'role', 'status')
+            ->select(
+                'id',
+                'register_date',
+                'email', 
+                'role',
+                'status',
+                'name_first first_name',
+                'name_last last_name'
+            )
             ->from('user_users')
             ->where('id = :id')
             ->setParameter(':id', $id)
@@ -103,6 +112,17 @@ class UserFetcher
         $view->socialNetworks = $statement->fetchAll();
 
         return $view;
+    }
+
+    public function getDetails(string $id): DetailsView
+    {
+        $details = $this->findDetails($id);
+
+        if (!$details) {
+            throw new LogicException('User is not found');
+        }
+
+        return $details;
     }
 
     public function findBySignUpConfirmToken(string $token): ?ShortView

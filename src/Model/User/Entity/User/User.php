@@ -49,6 +49,11 @@ class User
      */
     private $confirmToken;
     /**
+     * @var Name
+     * @ORM\Embedded(class="Name")
+     */
+    private $name;
+    /**
      * @var Email|null
      * @ORM\Column(type="user_user_email", name="new_email", nullable=true)
      */
@@ -79,10 +84,11 @@ class User
      */
     private $socialNetworks;
 
-    private function __construct(Id $id, DateTimeImmutable $registerDate)
+    private function __construct(Id $id, DateTimeImmutable $registerDate, Name $name)
     {
         $this->id = $id;
         $this->registerDate = $registerDate;
+        $this->name = $name;
         $this->role = Role::user();
         $this->socialNetworks = new ArrayCollection();
     }
@@ -90,12 +96,13 @@ class User
     public static function signUpByEmail(
         Id $id,
         DateTimeImmutable $registerDate,
+        Name $name,
         Email $email,
         string $passwordHash,
         string $confirmToken
     ): self
     {
-        $user = new self($id, $registerDate);
+        $user = new self($id, $registerDate, $name);
 
         $user->email = $email;
         $user->passwordHash = $passwordHash;
@@ -108,11 +115,12 @@ class User
     public static function signUpBySocialNetwork(
         Id $id,
         DateTimeImmutable $registerDate,
+        Name $name,
         string $socialNetwork,
         string $identity
     ): self
     {
-        $user = new self($id, $registerDate);
+        $user = new self($id, $registerDate, $name);
 
         $user->attachNetwork($socialNetwork, $identity);
         $user->status = self::STATUS_ACTIVE;
@@ -249,6 +257,16 @@ class User
     public function getNewEmailToken(): ?string
     {
         return $this->newEmailToken;
+    }
+
+    public function getName(): Name
+    {
+        return $this->name;
+    }
+
+    public function changeName(Name $name): void
+    {
+        $this->name = $name;
     }
 
     public function changeRole(Role $role): void

@@ -24,7 +24,7 @@ class ProfileController extends AbstractController
      */
     public function index(): Response
     {
-        $user = $this->users->findDetails($this->getUser()->getId());
+        $user = $this->users->getDetails($this->getUser()->getId());
 
         return $this->render('app/profile/show.html.twig', compact('user'));
     }

@@ -4,18 +4,29 @@ namespace App\Tests\Factory;
 
 use App\Model\User\Entity\User\Email;
 use App\Model\User\Entity\User\Id;
+use App\Model\User\Entity\User\Name;
 use App\Model\User\Entity\User\User;
 use DateTimeImmutable;
 use RuntimeException;
 
 class UserFactory
 {
+    private $id;
+    private $registerDate;
     private $email;
     private $password;
+    private $name;
     private $token;
     private $socialNetwork;
     private $identity;
     private $confirmed = false;
+
+    public function __construct()
+    {
+        $this->id = Id::next();
+        $this->registerDate = new DateTimeImmutable();
+        $this->name = new Name('John', 'Doe');
+    }
 
     public function byEmail(Email $email = null, string $password = null, string $token = null): self
     {
@@ -45,8 +56,9 @@ class UserFactory
     {
         if ($this->email) {
             $user = User::signUpByEmail(
-                Id::next(),
-                new DateTimeImmutable(),
+                $this->id,
+                $this->registerDate,
+                $this->name,
                 $this->email,
                 $this->password,
                 $this->token
@@ -61,8 +73,9 @@ class UserFactory
 
         if ($this->socialNetwork) {
             $user = User::signUpBySocialNetwork(
-                Id::next(),
-                new DateTimeImmutable(),
+                $this->id,
+                $this->registerDate,
+                $this->name,
                 $this->socialNetwork,
                 $this->identity
             );
