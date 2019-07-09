@@ -147,6 +147,7 @@ class User
 
         $this->status = self::STATUS_ACTIVE;
     }
+
     public function block(): void
     {
         if ($this->isBlocked()) {
