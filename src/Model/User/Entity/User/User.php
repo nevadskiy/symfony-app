@@ -140,6 +140,23 @@ class User
         $this->socialNetworks->add(new SocialNetwork($this, $network, $identity));
     }
 
+    public function detachNetwork(string $network, string $identity): void
+    {
+        if (!$this->email && $this->socialNetworks->count() === 1) {
+            throw new DomainException('Unable to detach the last social network.');
+        }
+
+        /** @var SocialNetwork $n */
+        foreach ($this->socialNetworks as $n) {
+            if ($n->equals($network, $identity)) {
+                $this->socialNetworks->removeElement($n);
+                return;
+            }
+        }
+
+        throw new DomainException('Social network is not attached.');
+    }
+
     public function isWait(): bool
     {
         return $this->status === self::STATUS_WAIT;

@@ -31,7 +31,14 @@ class UserFetcher
     public function findForAuth(string $email): ?AuthView
     {
         $statement = $this->connection->createQueryBuilder()
-            ->select('id', 'email', 'password_hash', 'role', 'status')
+            ->select(
+                'id',
+                'email',
+                'password_hash',
+                'TRIM(CONCAT(name_first, \' \', name_last)) AS name',
+                'role',
+                'status'
+            )
             ->from('user_users')
             ->where('email = :email')
             ->setParameter(':email', $email)
@@ -49,6 +56,7 @@ class UserFetcher
                 'u.id',
                 'u.email',
                 'u.password_hash',
+                'TRIM(CONCAT(u.name_first, \' \', u.name_last)) AS name',
                 'u.role',
                 'u.status',
             ])
@@ -84,7 +92,7 @@ class UserFetcher
             ->select(
                 'id',
                 'register_date',
-                'email', 
+                'email',
                 'role',
                 'status',
                 'name_first first_name',
@@ -142,5 +150,23 @@ class UserFetcher
         $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, ShortView::class);
 
         return $statement->fetch() ?: null;
+    }
+
+    public function all(): array
+    {
+        $statement = $this->connection->createQueryBuilder()
+            ->select(
+                'id',
+                'register_date',
+                'TRIM(CONCAT(name_first, \' \', name_last)) AS name',
+                'email',
+                'role',
+                'status'
+            )
+            ->from('user_users')
+            ->orderBy('register_date', 'desc')
+            ->execute();
+
+        return $statement->fetchAll(FetchMode::ASSOCIATIVE);
     }
 }

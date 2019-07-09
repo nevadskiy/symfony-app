@@ -60,4 +60,9 @@ class SocialNetwork
     {
         return $this->name === $name;
     }
+
+    public function equals(string $name, string $identity): bool
+    {
+        return $this->name === $name && $this->identity === $identity;
+    }
 }

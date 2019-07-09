@@ -24,7 +24,7 @@
     <ul class="nav navbar-nav ml-auto mr-4">
         <li class="nav-item dropdown">
             <a class="nav-link nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                {{ app.user.username }}
+                {{ app.user.nameFormatted }}
             </a>
             <div class="dropdown-menu dropdown-menu-right">
                 <div class="dropdown-header text-center">
@@ -43,6 +43,11 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('home') }}">
                         <i class="nav-icon icon-speedometer"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('users') }}">
+                        <i class="nav-icon icon-people"></i> Users
                     </a>
                 </li>
                 <li class="nav-item">
