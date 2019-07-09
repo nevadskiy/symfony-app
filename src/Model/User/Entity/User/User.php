@@ -21,6 +21,7 @@ class User
 {
     private const STATUS_WAIT = 'wait';
     public const STATUS_ACTIVE = 'active';
+    private const STATUS_BLOCKED = 'blocked';
 
     /**
      * @var Id
@@ -128,6 +129,33 @@ class User
         return $user;
     }
 
+    public static function create(Id $id, DateTimeImmutable $date, Name $name, Email $email, string $passwordHash): self
+    {
+        $user = new self($id, $date, $name);
+        $user->email = $email;
+        $user->passwordHash = $passwordHash;
+        $user->status = self::STATUS_ACTIVE;
+
+        return $user;
+    }
+
+    public function activate(): void
+    {
+        if ($this->isActive()) {
+            throw new DomainException('User is already active.');
+        }
+
+        $this->status = self::STATUS_ACTIVE;
+    }
+    public function block(): void
+    {
+        if ($this->isBlocked()) {
+            throw new DomainException('User is already blocked.');
+        }
+
+        $this->status = self::STATUS_BLOCKED;
+    }
+
     public function attachNetwork(string $network, string $identity): void
     {
         /** @var SocialNetwork $n */
@@ -165,6 +193,11 @@ class User
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === self::STATUS_BLOCKED;
     }
 
     public function getId(): Id
@@ -281,6 +314,12 @@ class User
         return $this->name;
     }
 
+    public function edit(Email $email, Name $name): void
+    {
+        $this->name = $name;
+        $this->email = $email;
+    }
+
     public function changeName(Name $name): void
     {
         $this->name = $name;
@@ -298,6 +337,11 @@ class User
     public function getRole(): Role
     {
         return $this->role;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 
     /**

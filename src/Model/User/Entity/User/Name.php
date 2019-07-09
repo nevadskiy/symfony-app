@@ -40,6 +40,11 @@ class Name
         return $this->last;
     }
 
+    public function getFull(): string
+    {
+        return $this->first . ' ' . $this->last;
+    }
+
     private function validate(string $first, string $last): void
     {
         Assert::notEmpty($first);

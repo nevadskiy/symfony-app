@@ -10,6 +10,10 @@
 {% endblock %}
 
 {% block body %}
+    <div class="controls">
+        <a href="{{ path('users.create') }}" class="btn btn-success">Create User</a>
+    </div>
+
     <div class="box">
         <table class="table table-bordered table-hover">
             <thead>
@@ -25,7 +29,7 @@
             {% for user in users %}
                 <tr>
                     <td>{{ user.register_date|date('Y-m-d') }}</td>
-                    <td>{{ user.name }}</td>
+                    <td><a href="{{ path('users.show', {'id': user.id}) }}">{{ user.name }}</a></td>
                     <td>{{ user.email }}</td>
                     <td>{{ user_role(user.role) }}</td>
                     <td>{{ user_status(user.status) }}</td>
