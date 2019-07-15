@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Model\User\Entity\User\User;
-use App\ReadModel\User\UserFetcher;
-use DomainException;
-use Psr\Log\LoggerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use App\Model\User\UseCase\Create;
 use App\Model\User\UseCase\Edit;
 use App\Model\User\UseCase\Role;
 use App\Model\User\UseCase\SignUp\Confirm;
 use App\Model\User\UseCase\Activate;
 use App\Model\User\UseCase\Block;
+use App\Model\User\Entity\User\User;
+use App\ReadModel\User\UserFetcher;
+use App\ReadModel\User\Filter;
+use DomainException;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
 class UsersController extends AbstractController
 {
@@ -32,13 +33,22 @@ class UsersController extends AbstractController
 
     /**
      * @Route("/users", name="users")
+     * @param Request $request
      * @return Response
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $users = $this->users->all();
+        $filter = new Filter\Filter();
 
-        return $this->render('app/users/index.html.twig', compact('users'));
+        $form = $this->createForm(Filter\Form::class, $filter);
+        $form->handleRequest($request);
+
+        $users = $this->users->all($filter);
+
+        return $this->render('app/users/index.html.twig', [
+            'users' => $users,
+            'form' => $form->createView(),
+        ]);
     }
 
     /**
@@ -190,7 +200,7 @@ class UsersController extends AbstractController
 
         try {
             $handler->handle($command);
-        } catch (\DomainException $e) {
+        } catch (DomainException $e) {
             $this->logger->error($e->getMessage(), ['exception' => $e]);
             $this->addFlash('error', $e->getMessage());
         }
@@ -211,11 +221,16 @@ class UsersController extends AbstractController
             return $this->redirectToRoute('users.show', ['id' => $user->getId()]);
         }
 
+        if ($user->getId()->getValue() === $this->getUser()->getId()) {
+            $this->addFlash('error', 'Unable to block yourself.');
+            return $this->redirectToRoute('users.show', ['id' => $user->getId()]);
+        }
+
         $command = new Block\Command($user->getId()->getValue());
 
         try {
             $handler->handle($command);
-        } catch (\DomainException $e) {
+        } catch (DomainException $e) {
             $this->logger->error($e->getMessage(), ['exception' => $e]);
             $this->addFlash('error', $e->getMessage());
         }
