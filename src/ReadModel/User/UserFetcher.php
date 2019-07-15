@@ -10,6 +10,7 @@ use Doctrine\DBAL\FetchMode;
 use Knp\Component\Pager\Pagination\PaginationInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use LogicException;
+use UnexpectedValueException;
 
 class UserFetcher
 {
@@ -157,7 +158,7 @@ class UserFetcher
         return $statement->fetch() ?: null;
     }
 
-    public function all(Filter $filter, int $page, int $size): PaginationInterface
+    public function all(Filter $filter, int $page, int $size, string $sort, string $direction): PaginationInterface
     {
         $query = $this->connection->createQueryBuilder()
             ->select(
@@ -168,8 +169,7 @@ class UserFetcher
                 'role',
                 'status'
             )
-            ->from('user_users')
-            ->orderBy('register_date', 'desc');
+            ->from('user_users');
 
         if ($filter->name) {
             $query->andWhere($query->expr()->like('LOWER(CONCAT(name_first, \' \', name_last))', ':name'));
@@ -191,7 +191,11 @@ class UserFetcher
             $query->setParameter(':role', $filter->role);
         }
 
-        $statement = $query->execute();
+        if (!\in_array($sort, ['register_date', 'name', 'email', 'role', 'status'], true)) {
+            throw new UnexpectedValueException("Cannot sort by {$sort}");
+        }
+
+        $query->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc');
 
         return $this->paginator->paginate($query, $page, $size);
     }
