@@ -1,3 +1,1 @@
 # symfony-app
-
-ADD DEBUG INSTRUCTIONS
