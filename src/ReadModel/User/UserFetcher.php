@@ -7,15 +7,19 @@ namespace App\ReadModel\User;
 use App\ReadModel\User\Filter\Filter;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
+use Knp\Component\Pager\Pagination\PaginationInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use LogicException;
 
 class UserFetcher
 {
     private $connection;
+    private $paginator;
 
-    public function __construct(Connection $connection)
+    public function __construct(Connection $connection, PaginatorInterface $paginator)
     {
         $this->connection = $connection;
+        $this->paginator = $paginator;
     }
 
     public function existsByResetPasswordToken($token): bool
@@ -153,7 +157,7 @@ class UserFetcher
         return $statement->fetch() ?: null;
     }
 
-    public function all(Filter $filter): array
+    public function all(Filter $filter, int $page, int $size): PaginationInterface
     {
         $query = $this->connection->createQueryBuilder()
             ->select(
@@ -189,6 +193,6 @@ class UserFetcher
 
         $statement = $query->execute();
 
-        return $statement->fetchAll(FetchMode::ASSOCIATIVE);
+        return $this->paginator->paginate($query, $page, $size);
     }
 }
