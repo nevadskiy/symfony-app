@@ -7,5 +7,3 @@ make fixtures-load
 
 
 # symfony-app
-
-ADD DEBUG INSTRUCTIONS
