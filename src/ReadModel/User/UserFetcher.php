@@ -4,23 +4,27 @@ declare(strict_types=1);
 
 namespace App\ReadModel\User;
 
+use App\Model\User\Entity\User\User;
+use App\ReadModel\NotFoundException;
 use App\ReadModel\User\Filter\Filter;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
+use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\Pagination\PaginationInterface;
 use Knp\Component\Pager\PaginatorInterface;
-use LogicException;
 use UnexpectedValueException;
 
 class UserFetcher
 {
     private $connection;
     private $paginator;
+    private $repository;
 
-    public function __construct(Connection $connection, PaginatorInterface $paginator)
+    public function __construct(Connection $connection, PaginatorInterface $paginator, EntityManagerInterface $em)
     {
         $this->connection = $connection;
         $this->paginator = $paginator;
+        $this->repository = $em->getRepository(User::class);
     }
 
     public function existsByResetPasswordToken($token): bool
@@ -92,51 +96,16 @@ class UserFetcher
         return $statement->fetch() ?: null;
     }
 
-    public function findDetails(string $id): ?DetailsView
+    public function get(string $id): User
     {
-        $statement = $this->connection->createQueryBuilder()
-            ->select(
-                'id',
-                'register_date',
-                'email',
-                'role',
-                'status',
-                'name_first first_name',
-                'name_last last_name'
-            )
-            ->from('user_users')
-            ->where('id = :id')
-            ->setParameter(':id', $id)
-            ->execute();
+        /** @var User $user */
+        $user = $this->repository->find($id);
 
-        $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, DetailsView::class);
-
-        /** @var DetailsView $view */
-        $view = $statement->fetch();
-
-        $statement = $this->connection->createQueryBuilder()
-            ->select('name', 'identity')
-            ->from('user_social_networks')
-            ->where('user_id = :id')
-            ->setParameter(':id', $id)
-            ->execute();
-
-        $statement->setFetchMode(FetchMode::CUSTOM_OBJECT, SocialNetworkView::class);
-
-        $view->socialNetworks = $statement->fetchAll();
-
-        return $view;
-    }
-
-    public function getDetails(string $id): DetailsView
-    {
-        $details = $this->findDetails($id);
-
-        if (!$details) {
-            throw new LogicException('User is not found');
+        if (!$user) {
+            throw new NotFoundException('User is not found');
         }
 
-        return $details;
+        return $user;
     }
 
     public function findBySignUpConfirmToken(string $token): ?ShortView
