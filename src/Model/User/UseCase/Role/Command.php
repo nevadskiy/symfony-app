@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\User\UseCase\Role;
 
+use Symfony\Component\Validator\Constraints as Assert;
 use App\Model\User\Entity\User\User;
 
 class Command
