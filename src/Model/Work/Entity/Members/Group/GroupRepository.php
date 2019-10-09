@@ -6,7 +6,6 @@ namespace App\Model\Work\Entity\Members\Group;
 
 use App\Model\EntityNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping as ORM;
 
 class GroupRepository
 {

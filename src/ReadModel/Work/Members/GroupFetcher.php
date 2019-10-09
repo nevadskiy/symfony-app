@@ -16,6 +16,20 @@ class GroupFetcher
         $this->connection = $connection;
     }
 
+    public function assoc(): array
+    {
+        $statement = $this->connection->createQueryBuilder()
+            ->select([
+                'id',
+                'name',
+            ])
+            ->from('work_members_groups')
+            ->orderBy('name')
+            ->execute();
+
+        return array_column($statement->fetchAll(FetchMode::ASSOCIATIVE), 'name', 'id');
+    }
+
     public function all(): array
     {
         $statement = $this->connection->createQueryBuilder()
