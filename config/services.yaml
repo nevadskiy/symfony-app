@@ -28,6 +28,10 @@ services:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
 
+    App\Menu\SidebarMenu:
+        tags:
+            - { name: knp_menu.menu_builder, method: build, alias: sidebar }
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
     App\Model\User\Service\SignUpConfirmTokenSender:
