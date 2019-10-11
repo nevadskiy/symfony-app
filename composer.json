@@ -5,6 +5,7 @@
         "php": "^7.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "ext-pdo": "*",
         "knplabs/knp-menu-bundle": "^2.3",
         "knplabs/knp-paginator-bundle": "^4.0",
         "knpuniversity/oauth2-client-bundle": "^1.28",
