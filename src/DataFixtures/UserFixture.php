@@ -14,6 +14,9 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class UserFixture extends Fixture
 {
+    public const REFERENCE_ADMIN = 'user_user_admin';
+    public const REFERENCE_USER = 'user_user_user';
+
     private $hasher;
 
     public function __construct(PasswordHasher $hasher)
@@ -30,28 +33,29 @@ class UserFixture extends Fixture
             new Email('admin@mail.com'),
             $hash
         );
+        $manager->persist($admin);
+        $this->setReference(self::REFERENCE_ADMIN, $admin);
 
         $confirmed = $this->createConfirmed(
             new Name('John', 'Doe'),
             new Email('confirmed@mail.com'),
             $hash
         );
+        $manager->persist($confirmed);
+        $this->setReference(self::REFERENCE_USER, $confirmed);
 
         $notConfirmed = $this->createNotConfirmed(
             new Name('John', 'Doe'),
             new Email('not.confirmed@mail.com'),
             $hash
         );
+        $manager->persist($notConfirmed);
 
         $socialNetworked = $this->createRegisteredWithSocialNetwork(
             new Name('John', 'Doe'),
             'facebook',
             '0123456789'
         );
-
-        $manager->persist($admin);
-        $manager->persist($confirmed);
-        $manager->persist($notConfirmed);
         $manager->persist($socialNetworked);
 
         $manager->flush();
