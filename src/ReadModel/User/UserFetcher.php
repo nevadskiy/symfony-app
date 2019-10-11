@@ -35,7 +35,7 @@ class UserFetcher
                 ->where('reset_password_token = :token')
                 ->setParameter(':token', $token)
                 ->execute()
-                ->fetchColumn(0) > 0;
+                ->fetchColumn() > 0;
     }
 
     public function findForAuth(string $email): ?AuthView
