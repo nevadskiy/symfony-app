@@ -6,6 +6,7 @@ namespace App\Controller\Profile\OAuth;
 
 use App\Model\User\UseCase\SocialNetwork\Detach\Command;
 use App\Model\User\UseCase\SocialNetwork\Detach\Handler;
+use DomainException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,12 +43,10 @@ class DetachController extends AbstractController
 
         try {
             $handler->handle($command);
-
             return $this->redirectToRoute('profile');
-        } catch (\DomainException $e) {
-            $this->logger->error($e->getMessage(), ['exception' => $e]);
+        } catch (DomainException $e) {
+            $this->logger->warning($e->getMessage(), ['exception' => $e]);
             $this->addFlash('error', $e->getMessage());
-
             return $this->redirectToRoute('profile');
         }
     }

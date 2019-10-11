@@ -42,7 +42,7 @@ class ResetPasswordController extends AbstractController
 
                 return $this->redirectToRoute('home');
             } catch (DomainException $e) {
-                $this->logger->error($e->getMessage(), ['exception' => $e]);
+                $this->logger->warning($e->getMessage(), ['exception' => $e]);
                 $this->addFlash('error', $e->getMessage());
             }
         }
@@ -85,7 +85,7 @@ class ResetPasswordController extends AbstractController
 
                 return $this->redirectToRoute('home');
             } catch (DomainException $e) {
-                $this->logger->error($e->getMessage(), ['exception' => $e]);
+                $this->logger->warning($e->getMessage(), ['exception' => $e]);
                 $this->addFlash('error', $e->getMessage());
             }
         }
