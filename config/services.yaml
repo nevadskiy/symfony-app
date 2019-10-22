@@ -30,8 +30,10 @@ services:
         tags: ['controller.service_arguments']
 
     App\Menu\SidebarMenu:
-        tags:
-            - { name: knp_menu.menu_builder, method: build, alias: sidebar }
+        tags: [{ name: knp_menu.menu_builder, method: build, alias: sidebar }]
+
+    App\Menu\Work\ProjectMenu:
+        tags: [{ name: knp_menu.menu_builder, method: build, alias: work_project }]
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
