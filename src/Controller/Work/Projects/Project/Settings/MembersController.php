@@ -8,9 +8,9 @@ use App\Annotation\Guid;
 use App\Model\Work\Entity\Members\Member\Id;
 use App\Model\Work\Entity\Projects\Project\Project;
 use App\Model\Work\UseCase\Projects\Project\Membership;
+use App\Security\Voter\Work\ProjectAccess;
 use DomainException;
 use Psr\Log\LoggerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +20,6 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/work/projects/{project_id}/settings/members", name="work.projects.project.settings.members")
  * @ParamConverter("project", options={"id" = "project_id"})
- * @IsGranted("ROLE_WORK_MANAGE_PROJECTS")
  */
 class MembersController extends AbstractController
 {
@@ -38,44 +37,11 @@ class MembersController extends AbstractController
      */
     public function index(Project $project): Response
     {
+        $this->denyAccessUnlessGranted(ProjectAccess::MANAGE_MEMBERS, $project);
+
         return $this->render('app/work/projects/project/settings/members/index.html.twig', [
             'project' => $project,
             'memberships' => $project->getMemberships(),
-        ]);
-    }
-
-    /**
-     * @Route("/assign", name=".assign")
-     * @param Project $project
-     * @param Request $request
-     * @param Membership\Add\Handler $handler
-     * @return Response
-     */
-    public function assign(Project $project, Request $request, Membership\Add\Handler $handler): Response
-    {
-        if (!$project->getDepartments()) {
-            $this->addFlash('error', 'Add departments before adding members.');
-            return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
-        }
-
-        $command = new Membership\Add\Command($project->getId()->getValue());
-
-        $form = $this->createForm(Membership\Add\Form::class, $command, ['project' => $project->getId()->getValue()]);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            try {
-                $handler->handle($command);
-                return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
-            } catch (DomainException $e) {
-                $this->logger->warning($e->getMessage(), ['exception' => $e]);
-                $this->addFlash('error', $e->getMessage());
-            }
-        }
-
-        return $this->render('app/work/projects/project/settings/members/assign.html.twig', [
-            'project' => $project,
-            'form' => $form->createView(),
         ]);
     }
 
@@ -89,6 +55,8 @@ class MembersController extends AbstractController
      */
     public function edit(Project $project, string $member_id, Request $request, Membership\Edit\Handler $handler): Response
     {
+        $this->denyAccessUnlessGranted(ProjectAccess::MANAGE_MEMBERS, $project);
+
         $membership = $project->getMembership(new Id($member_id));
 
         $command = Membership\Edit\Command::fromMembership($project, $membership);
@@ -114,6 +82,55 @@ class MembersController extends AbstractController
     }
 
     /**
+     * @Route("/{member_id}", name=".show", requirements={"member_id"=Guid::PATTERN}))
+     * @param Project $project
+     * @return Response
+     */
+    public function show(Project $project): Response
+    {
+        $this->denyAccessUnlessGranted(ProjectAccess::MANAGE_MEMBERS, $project);
+
+        return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
+    }
+
+    /**
+     * @Route("/assign", name=".assign")
+     * @param Project $project
+     * @param Request $request
+     * @param Membership\Add\Handler $handler
+     * @return Response
+     */
+    public function assign(Project $project, Request $request, Membership\Add\Handler $handler): Response
+    {
+        if (!$project->getDepartments()) {
+            $this->addFlash('error', 'Add departments before adding members.');
+            return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
+        }
+
+        $this->denyAccessUnlessGranted(ProjectAccess::MANAGE_MEMBERS, $project);
+
+        $command = new Membership\Add\Command($project->getId()->getValue());
+
+        $form = $this->createForm(Membership\Add\Form::class, $command, ['project' => $project->getId()->getValue()]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $handler->handle($command);
+                return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
+            } catch (DomainException $e) {
+                $this->logger->warning($e->getMessage(), ['exception' => $e]);
+                $this->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('app/work/projects/project/settings/members/assign.html.twig', [
+            'project' => $project,
+            'form' => $form->createView(),
+        ]);
+    }
+
+    /**
      * @Route("/{member_id}/revoke", name=".revoke", methods={"POST"})
      * @param Project $project
      * @param string $member_id
@@ -127,6 +144,8 @@ class MembersController extends AbstractController
             return $this->redirectToRoute('work.projects.project.settings.departments', ['project_id' => $project->getId()]);
         }
 
+        $this->denyAccessUnlessGranted(ProjectAccess::MANAGE_MEMBERS, $project);
+
         $command = new Membership\Remove\Command($project->getId()->getValue(), $member_id);
 
         try {
@@ -136,16 +155,6 @@ class MembersController extends AbstractController
             $this->addFlash('error', $e->getMessage());
         }
 
-        return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
-    }
-
-    /**
-     * @Route("/{member_id}", name=".show", requirements={"member_id"=Guid::PATTERN}))
-     * @param Project $project
-     * @return Response
-     */
-    public function show(Project $project): Response
-    {
         return $this->redirectToRoute('work.projects.project.settings.members', ['project_id' => $project->getId()]);
     }
 }

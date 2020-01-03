@@ -166,10 +166,8 @@ class Project
 
     public function addMember(Member $member, array $departmentIds, array $roles): void
     {
-        foreach ($this->memberships as $membership) {
-            if ($membership->isForMember($member->getId())) {
-                throw new DomainException('Member already exists.');
-            }
+        if ($this->hasMember($member->getId())) {
+            throw new DomainException('Member already exists.');
         }
 
         $departments = array_map([$this, 'getDepartment'], $departmentIds);
@@ -201,6 +199,28 @@ class Project
         }
 
         throw new DomainException('Member is not found.');
+    }
+
+    public function hasMember(MemberId $id): bool
+    {
+        foreach ($this->memberships as $membership) {
+            if ($membership->isForMember($id)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isMemberGranted(MemberId $id, string $permission): bool
+    {
+        try {
+            $membership = $this->getMembership($id);
+        } catch (DomainException $e) {
+            return false;
+        }
+
+        return $membership->isGranted($permission);
     }
 
     public function getMemberships()
