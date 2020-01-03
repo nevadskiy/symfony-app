@@ -166,8 +166,10 @@ class Project
 
     public function addMember(Member $member, array $departmentIds, array $roles): void
     {
-        if ($this->getMembership($member->getId())) {
-            throw new DomainException('Member already exists.');
+        foreach ($this->memberships as $membership) {
+            if ($membership->isForMember($member->getId())) {
+                throw new DomainException('Member already exists.');
+            }
         }
 
         $departments = array_map([$this, 'getDepartment'], $departmentIds);

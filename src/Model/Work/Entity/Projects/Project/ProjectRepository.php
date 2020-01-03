@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\Work\Entity\Projects\Project;
 
+use App\Model\Work\Entity\Projects\Role\Id as RoleId;
 use App\Model\EntityNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -42,5 +43,16 @@ class ProjectRepository
     public function remove(Project $project): void
     {
         $this->em->remove($project);
+    }
+
+    public function hasMembersWithRole(RoleId $id): bool
+    {
+        return $this->repo->createQueryBuilder('p')
+                ->select('COUNT(p.id)')
+                ->innerJoin('p.memberships', 'ms')
+                ->innerJoin('ms.roles', 'r')
+                ->andWhere('r.id = :role')
+                ->setParameter(':role', $id->getValue())
+                ->getQuery()->getSingleScalarResult() > 0;
     }
 }
