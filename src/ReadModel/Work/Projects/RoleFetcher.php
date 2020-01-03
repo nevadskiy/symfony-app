@@ -6,6 +6,7 @@ namespace App\ReadModel\Work\Projects;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\FetchMode;
+use PDO;
 
 class RoleFetcher
 {
@@ -14,6 +15,17 @@ class RoleFetcher
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
+    }
+
+    public function allList(): array
+    {
+        $stmt = $this->connection->createQueryBuilder()
+            ->select(['id', 'name'])
+            ->from('work_projects_roles')
+            ->orderBy('name')
+            ->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
     public function all(): array
