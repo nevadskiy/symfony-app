@@ -192,7 +192,7 @@ class Project
         );
     }
 
-    protected function getMembership(MemberId $id): Membership
+    public function getMembership(MemberId $id): Membership
     {
         foreach ($this->memberships as $membership) {
             if ($membership->isForMember($id)) {
