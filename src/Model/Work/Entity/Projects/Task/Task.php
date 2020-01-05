@@ -7,6 +7,7 @@ namespace App\Model\Work\Entity\Projects\Task;
 use App\Model\Work\Entity\Members\Member\Member;
 use App\Model\Work\Entity\Projects\Project\Project;
 use DateTimeImmutable;
+use DomainException;
 
 class Task
 {
@@ -19,6 +20,8 @@ class Task
     private $type;
     private $progress;
     private $priority;
+    private $planDate;
+    private $parent;
 
     public function __construct(
         Id $id,
@@ -85,5 +88,44 @@ class Task
     public function getPriority(): int
     {
         return $this->priority;
+    }
+
+    public function edit(string $name, ?string $content): void
+    {
+        $this->name = $name;
+        $this->content = $content;
+    }
+
+    public function plan(?DateTimeImmutable $date): void
+    {
+        $this->planDate = $date;
+    }
+
+    public function getPlanDate(): ?DateTimeImmutable
+    {
+        return $this->planDate;
+    }
+
+    public function setChildOf(?Task $parent): void
+    {
+        $this->guardCycle($parent);
+        $this->parent = $parent;
+    }
+
+    public function getParent(): ?Task
+    {
+        return $this->parent;
+    }
+
+    protected function guardCycle(?Task $parent): void
+    {
+        if ($parent) {
+            $current = $parent;
+            do {
+                if ($current === $this) {
+                    throw new DomainException('Cyclomatic children.');
+                }
+            } while ($current && $current = $current->getParent());
+        }
     }
 }

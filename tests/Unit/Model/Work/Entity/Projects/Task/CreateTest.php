@@ -10,6 +10,7 @@ use App\Model\Work\Entity\Projects\Task\Type;
 use App\Tests\Builder\Work\Members\GroupBuilder;
 use App\Tests\Builder\Work\Members\MemberBuilder;
 use App\Tests\Builder\Work\Projects\ProjectBuilder;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class CreateTest extends TestCase
@@ -25,7 +26,7 @@ class CreateTest extends TestCase
             $id = new Id(1),
             $project,
             $member,
-            $date = new \DateTimeImmutable(),
+            $date = new DateTimeImmutable(),
             $type = new Type(Type::FEATURE),
             $priority = 2,
             $name = 'Test Task',
@@ -41,5 +42,7 @@ class CreateTest extends TestCase
         self::assertEquals($name, $task->getName());
         self::assertEquals($content, $task->getContent());
         self::assertEquals(0, $task->getProgress());
+        self::assertNull($task->getPlanDate());
+        self::assertNull($task->getParent());
     }
 }
