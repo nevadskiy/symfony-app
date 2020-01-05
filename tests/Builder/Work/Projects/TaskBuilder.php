@@ -43,4 +43,12 @@ class TaskBuilder
             $this->content
         );
     }
+
+    public function withType(Type $type): self
+    {
+        $clone = clone $this;
+        $clone->type = $type;
+
+        return $clone;
+    }
 }
