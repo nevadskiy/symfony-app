@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
+use App\Controller\ErrorHandler;
 use App\Model\User\UseCase\SignUp;
 use App\ReadModel\User\UserFetcher;
 use App\Security\LoginFormAuthenticator;
 use DomainException;
-use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,13 +19,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SignUpController extends AbstractController
 {
-    private $logger;
+    private $handler;
     private $translator;
     private $users;
 
-    public function __construct(LoggerInterface $logger, TranslatorInterface $translator, UserFetcher $users)
+    public function __construct(ErrorHandler $handler, TranslatorInterface $translator, UserFetcher $users)
     {
-        $this->logger = $logger;
+        $this->handler = $handler;
         $this->translator = $translator;
         $this->users = $users;
     }
@@ -49,7 +49,7 @@ class SignUpController extends AbstractController
                 $this->addFlash('success', 'Check your email.');
                 return $this->redirectToRoute('home');
             } catch (DomainException $e) {
-                $this->logger->warning($e->getMessage(), ['exception' => $e]);
+                $this->handler->handle($e);
                 $this->addFlash('error', $this->translator->trans($e->getMessage(), [], 'exceptions'));
             }
         }
@@ -80,7 +80,7 @@ class SignUpController extends AbstractController
     {
         $user = $this->users->findBySignUpConfirmToken($token);
 
-        if (!$user) {
+        if (! $user) {
             $this->addFlash('error', 'Incorrect or already confirmed token.');
             return $this->redirectToRoute('auth.signup');
         }
@@ -89,19 +89,19 @@ class SignUpController extends AbstractController
 
         try {
             $handler->handle($command);
-            $this->addFlash('success', 'Email is successfully confirmed.');
-
-            return $guardHandler->authenticateUserAndHandleSuccess(
-                $userProvider->loadUserByUsername($user->email),
-                $request,
-                $authenticator,
-                'main'
-            );
         } catch (DomainException $e) {
-            $this->logger->warning($e->getMessage(), ['exception' => $e]);
+            $this->handler->handle($e);
             $this->addFlash('error', $this->translator->trans($e->getMessage(), [], 'exceptions'));
-
             return $this->redirectToRoute('auth.signup');
         }
+
+        $this->addFlash('success', 'Email is successfully confirmed.');
+
+        return $guardHandler->authenticateUserAndHandleSuccess(
+            $userProvider->loadUserByUsername($user->email),
+            $request,
+            $authenticator,
+            'main'
+        );
     }
 }

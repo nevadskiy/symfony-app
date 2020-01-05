@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
+use App\Controller\ErrorHandler;
 use App\Model\User\UseCase\ResetPassword;
 use App\ReadModel\User\UserFetcher;
 use DomainException;
-use Psr\Log\LoggerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,11 +16,11 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ResetPasswordController extends AbstractController
 {
-    private $logger;
+    private $handler;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(ErrorHandler $handler)
     {
-        $this->logger = $logger;
+        $this->handler = $handler;
     }
 
     /**
@@ -42,7 +43,7 @@ class ResetPasswordController extends AbstractController
 
                 return $this->redirectToRoute('home');
             } catch (DomainException $e) {
-                $this->logger->warning($e->getMessage(), ['exception' => $e]);
+                $this->handler->handle($e);
                 $this->addFlash('error', $e->getMessage());
             }
         }
@@ -59,7 +60,7 @@ class ResetPasswordController extends AbstractController
      * @param ResetPassword\Reset\Handler $handler
      * @param UserFetcher $users
      * @return Response
-     * @throws \Exception
+     * @throws Exception
      */
     public function reset(
         string $token,
@@ -85,7 +86,7 @@ class ResetPasswordController extends AbstractController
 
                 return $this->redirectToRoute('home');
             } catch (DomainException $e) {
-                $this->logger->warning($e->getMessage(), ['exception' => $e]);
+                $this->handler->handle($e);
                 $this->addFlash('error', $e->getMessage());
             }
         }

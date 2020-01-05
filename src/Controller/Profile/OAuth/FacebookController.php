@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Profile\OAuth;
 
+use App\Controller\ErrorHandler;
 use App\Model\User\UseCase\SocialNetwork\Attach\Command;
 use App\Model\User\UseCase\SocialNetwork\Attach\Handler;
 use DomainException;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
-use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,11 +17,11 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class FacebookController extends AbstractController
 {
-    private $logger;
+    private $handler;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(ErrorHandler $handler)
     {
-        $this->logger = $logger;
+        $this->handler = $handler;
     }
 
     /**
@@ -52,7 +52,7 @@ class FacebookController extends AbstractController
             $this->addFlash('success', 'Facebook is successfully attached.');
             return $this->redirectToRoute('profile');
         } catch (DomainException $e) {
-            $this->logger->warning($e->getMessage(), ['exception' => $e]);
+            $this->handler->handle($e);
             $this->addFlash('error', $e->getMessage());
             return $this->redirectToRoute('profile');
         }
