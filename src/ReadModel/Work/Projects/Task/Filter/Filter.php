@@ -1,7 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\ReadModel\Work\Projects\Task\Filter;
+
 class Filter
 {
     public $member;
@@ -32,6 +34,23 @@ class Filter
     {
         $clone = clone $this;
         $clone->member = $member;
+
+        return $clone;
+    }
+
+    public function forAuthor(string $author): self
+    {
+        $clone = clone $this;
+        $clone->author = $author;
+
+        return $clone;
+    }
+
+    public function forExecutor(string $executor): self
+    {
+        $clone = clone $this;
+        $clone->executor = $executor;
+
         return $clone;
     }
 }

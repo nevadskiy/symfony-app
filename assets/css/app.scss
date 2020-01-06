@@ -23,6 +23,25 @@ main {
     }
 }
 
+.card {
+    &> .table-bordered {
+        border: none;
+        margin-top: -1px;
+
+        th:first-child, td:first-child {
+            border-left: none;
+        }
+
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+
+        th, td {
+            border-bottom: none;
+        }
+    }
+}
+
 .controls {
     display: flex;
     flex-direction: row;
