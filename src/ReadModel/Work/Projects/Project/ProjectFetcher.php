@@ -8,6 +8,7 @@ use App\ReadModel\Work\Projects\Project\Filter\Filter;
 use Doctrine\DBAL\Connection;
 use Knp\Component\Pager\Pagination\PaginationInterface;
 use Knp\Component\Pager\PaginatorInterface;
+use PDO;
 use UnexpectedValueException;
 
 class ProjectFetcher
@@ -64,5 +65,19 @@ class ProjectFetcher
         $qb->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc');
 
         return $this->paginator->paginate($qb, $page, $size);
+    }
+
+    public function allList(): array
+    {
+        $stmt = $this->connection->createQueryBuilder()
+            ->select(
+                'id',
+                'name'
+            )
+            ->from('work_projects_projects')
+            ->orderBy('sort')
+            ->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 }
