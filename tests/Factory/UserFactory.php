@@ -5,7 +5,9 @@ namespace App\Tests\Factory;
 use App\Model\User\Entity\User\Email;
 use App\Model\User\Entity\User\Id;
 use App\Model\User\Entity\User\Name;
+use App\Model\User\Entity\User\Role;
 use App\Model\User\Entity\User\User;
+use BadMethodCallException;
 use DateTimeImmutable;
 use RuntimeException;
 
@@ -17,6 +19,7 @@ class UserFactory
     private $password;
     private $name;
     private $token;
+    private $role;
     private $socialNetwork;
     private $identity;
     private $confirmed = false;
@@ -27,6 +30,15 @@ class UserFactory
         $this->registerDate = new DateTimeImmutable();
         $this->name = new Name('John', 'Doe');
     }
+
+    public function withRole(Role $role): self
+    {
+        $clone = clone $this;
+        $clone->role = $role;
+
+        return $clone;
+    }
+
 
     public function byEmail(Email $email = null, string $password = null, string $token = null): self
     {
@@ -54,6 +66,8 @@ class UserFactory
 
     public function create(): User
     {
+        $user = null;
+
         if ($this->email) {
             $user = User::signUpByEmail(
                 $this->id,
@@ -67,8 +81,6 @@ class UserFactory
             if ($this->confirmed) {
                 $user->confirmSignUp();
             }
-
-            return $user;
         }
 
         if ($this->socialNetwork) {
@@ -79,10 +91,16 @@ class UserFactory
                 $this->socialNetwork,
                 $this->identity
             );
-
-            return $user;
         }
 
-        throw new RuntimeException('User factory method is not specified');
+        if (! $user) {
+            throw new BadMethodCallException('Specify via method.');
+        }
+
+        if ($this->role) {
+            $user->changeRole($this->role);
+        }
+
+        return $user;
     }
 }
