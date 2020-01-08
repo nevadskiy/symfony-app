@@ -6,6 +6,8 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-pdo": "*",
+        "cebe/markdown": "^1.2",
+        "exercise/htmlpurifier-bundle": "^2.0",
         "knplabs/knp-menu-bundle": "^2.3",
         "knplabs/knp-paginator-bundle": "^4.0",
         "knpuniversity/oauth2-client-bundle": "^1.28",
