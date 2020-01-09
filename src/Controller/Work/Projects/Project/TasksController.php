@@ -56,8 +56,8 @@ class TasksController extends AbstractController
             $filter,
             $request->query->getInt('page', 1),
             self::PER_PAGE,
-            $request->query->get('sort', 't.date'),
-            $request->query->get('direction', 'desc')
+            $request->query->get('sort'),
+            $request->query->get('direction')
         );
 
         return $this->render('app/work/projects/tasks/index.html.twig', [
@@ -83,8 +83,8 @@ class TasksController extends AbstractController
             $filter->forExecutor($this->getUser()->getId()),
             $request->query->getInt('page', 1),
             self::PER_PAGE,
-            $request->query->get('sort', 't.date'),
-            $request->query->get('direction', 'desc')
+            $request->query->get('sort'),
+            $request->query->get('direction')
         );
         return $this->render('app/work/projects/tasks/index.html.twig', [
             'project' => $project,
@@ -112,8 +112,8 @@ class TasksController extends AbstractController
             $filter->forAuthor($this->getUser()->getId()),
             $request->query->getInt('page', 1),
             self::PER_PAGE,
-            $request->query->get('sort', 't.date'),
-            $request->query->get('direction', 'desc')
+            $request->query->get('sort'),
+            $request->query->get('direction')
         );
 
         return $this->render('app/work/projects/tasks/index.html.twig', [
