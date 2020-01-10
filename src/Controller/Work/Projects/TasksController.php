@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Controller\Work\Projects;
 
 use App\Model\Work\Entity\Members\Member\Member;
+use App\Model\Work\Entity\Projects\Project\Project;
 use App\Model\Work\Entity\Projects\Task\Task;
 use App\Model\Work\UseCase\Projects\Task\ChildOf;
 use App\Model\Work\UseCase\Projects\Task\Edit;
 use App\Model\Work\UseCase\Projects\Task\Executor;
 use App\Model\Work\UseCase\Projects\Task\Move;
+use App\Model\Work\UseCase\Projects\Task\Files;
 use App\Model\Work\UseCase\Projects\Task\Plan;
 use App\Model\Work\UseCase\Projects\Task\Priority;
 use App\Model\Work\UseCase\Projects\Task\Progress;
@@ -22,7 +24,9 @@ use App\Model\Work\UseCase\Projects\Task\Type;
 use App\ReadModel\Work\Members\Member\MemberFetcher;
 use App\ReadModel\Work\Projects\Task\Filter;
 use App\ReadModel\Work\Projects\Task\TaskFetcher;
+use App\Security\Voter\Work\Projects\ProjectAccess;
 use App\Security\Voter\Work\Projects\TaskAccess;
+use App\Service\Uploader\FileUploader;
 use App\Controller\ErrorHandler;
 use DomainException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -83,19 +87,23 @@ class TasksController extends AbstractController
 
     /**
      * @Route("/me", name=".me")
-     * @ParamConverter("project", options={"id" = "project_id"})
+     * @param Project $project
      * @param Request $request
-     * @param TaskFetcher $tasks
      * @return Response
      */
-    public function me(Request $request, TaskFetcher $tasks): Response
+    public function me(Project $project, Request $request): Response
     {
-        $filter = Filter\Filter::all();
+        $this->denyAccessUnlessGranted(ProjectAccess::VIEW, $project);
+
+        $filter = Filter\Filter::forProject($project->getId()->getValue());
+
         $form = $this->createForm(Filter\Form::class, $filter, [
-            'action' => $this->generateUrl('work.projects.tasks'),
+            'action' => $this->generateUrl('work.projects.project.tasks', ['project_id' => $project->getId()]),
         ]);
+
         $form->handleRequest($request);
-        $pagination = $tasks->all(
+
+        $pagination = $this->tasks->all(
             $filter->forExecutor($this->getUser()->getId()),
             $request->query->getInt('page', 1),
             self::PER_PAGE,
@@ -103,7 +111,7 @@ class TasksController extends AbstractController
             $request->query->get('direction')
         );
         return $this->render('app/work/projects/tasks/index.html.twig', [
-            'project' => null,
+            'project' => $project,
             'pagination' => $pagination,
             'form' => $form->createView(),
         ]);
@@ -121,7 +129,7 @@ class TasksController extends AbstractController
         $filter = Filter\Filter::all();
 
         $form = $this->createForm(Filter\Form::class, $filter, [
-            'action' => $this->generateUrl('work.projects.tasks'),
+            'action' => $this->generateUrl('work.projects.project.tasks', ['project_id' => $project->getId()]),
         ]);
 
         $form->handleRequest($request);
@@ -570,5 +578,81 @@ class TasksController extends AbstractController
             'typeForm' => $typeForm->createView(),
             'priorityForm' => $priorityForm->createView(),
         ]);
+    }
+
+    /**
+     * @Route("/{id}/files", name=".files")
+     * @param Task $task
+     * @param Request $request
+     * @param Files\Add\Handler $handler
+     * @param FileUploader $uploader
+     * @return Response
+     */
+    public function files(Task $task, Request $request, Files\Add\Handler $handler, FileUploader $uploader): Response
+    {
+        $this->denyAccessUnlessGranted(TaskAccess::MANAGE, $task);
+
+        $command = new Files\Add\Command($task->getId()->getValue(), $this->getUser()->getId());
+
+        $form = $this->createForm(Files\Add\Form::class, $command);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $files = [];
+
+            foreach ($form->get('files')->getData() as $file) {
+                $uploaded = $uploader->upload($file);
+                $files[] = new Files\Add\File(
+                    $uploaded->getPath(),
+                    $uploaded->getName(),
+                    $uploaded->getSize()
+                );
+            }
+
+            $command->files = $files;
+
+            try {
+                $handler->handle($command);
+                return $this->redirectToRoute('work.projects.tasks.show', ['id' => $task->getId()]);
+            } catch (DomainException $e) {
+                $this->errors->handle($e);
+                $this->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('app/work/projects/tasks/files.html.twig', [
+            'project' => $task->getProject(),
+            'task' => $task,
+            'form' => $form->createView(),
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/files/{file_id}/delete", name=".files.delete", methods={"POST"})
+     * @ParamConverter("member", options={"id" = "member_id"})
+     * @param Task $task
+     * @param string $file_id
+     * @param Request $request
+     * @param Files\Remove\Handler $handler
+     * @return Response
+     */
+    public function fileDelete(Task $task, string $file_id, Request $request, Files\Remove\Handler $handler): Response
+    {
+        if (! $this->isCsrfTokenValid('revoke', $request->request->get('token'))) {
+            return $this->redirectToRoute('work.projects.tasks.show', ['id' => $task->getId()]);
+        }
+
+        $this->denyAccessUnlessGranted(TaskAccess::MANAGE, $task);
+
+        $command = new Files\Remove\Command($task->getId()->getValue(), $file_id);
+
+        try {
+            $handler->handle($command);
+        } catch (DomainException $e) {
+            $this->errors->handle($e);
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('work.projects.tasks.show', ['id' => $task->getId()]);
     }
 }
