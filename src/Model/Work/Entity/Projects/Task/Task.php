@@ -12,6 +12,9 @@ use DomainException;
 use Webmozart\Assert\Assert;
 use App\Model\Work\Entity\Members\Member\Id as MemberId;
 use Doctrine\ORM\Mapping as ORM;
+use App\Model\Work\Entity\Projects\Task\File\File;
+use App\Model\Work\Entity\Projects\Task\File\Id as FileId;
+use App\Model\Work\Entity\Projects\Task\File\Info;
 
 /**
  * @ORM\Entity()
@@ -105,6 +108,12 @@ class Task
      * @ORM\OrderBy({"name.first" = "ASC"})
      */
     private $executors;
+    /**
+     * @var ArrayCollection|File[]
+     * @ORM\OneToMany(targetEntity="App\Model\Work\Entity\Projects\Task\File\File", mappedBy="task", orphanRemoval=true, cascade={"all"})
+     * @ORM\OrderBy({"date" = "ASC"})
+     */
+    private $files;
 
     public function __construct(
         Id $id,
@@ -128,6 +137,7 @@ class Task
         $this->priority = $priority;
         $this->status = Status::new();
         $this->executors = new ArrayCollection();
+        $this->files = new ArrayCollection();
     }
 
     public function getId(): Id
@@ -352,5 +362,36 @@ class Task
         }
 
         $this->changeStatus(Status::working(), $date);
+    }
+
+    public function addFile(FileId $id, Member $member, \DateTimeImmutable $date, Info $info): void
+    {
+        $this->files->add(new File($this, $id, $member, $date, $info));
+    }
+
+    public function removeFile(FileId $id): void
+    {
+        $this->files->removeElement(
+            $this->getFile($id)
+        );
+    }
+
+    public function getFile(FileId $id): File
+    {
+        foreach ($this->files as $file) {
+            if ($file->getId()->isEqual($id)) {
+                return $file;
+            }
+        }
+
+        throw new DomainException('File is not found.');
+    }
+
+    /**
+     * @return File[]
+     */
+    public function getFiles(): array
+    {
+        return $this->files->toArray();
     }
 }

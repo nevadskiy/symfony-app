@@ -12,8 +12,6 @@ services:
         depends_on:
             - php-fpm
             - redis
-        networks:
-            - internal
 
     php-fpm:
         build:
@@ -22,14 +20,14 @@ services:
         volumes:
             - ./:/app
         environment:
-            XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
-            PHP_IDE_CONFIG: "serverName=Docker"
+            STORAGE_FTP_HOST: ${STORAGE_FTP_HOST}
+            STORAGE_FTP_USERNAME: ${STORAGE_FTP_USERNAME}
+            STORAGE_FTP_PASSWORD: ${STORAGE_FTP_PASSWORD}
         depends_on:
             - postgres
             - mailer
             - redis
-        networks:
-            - internal
+            - storage
 
     php-cli:
         build:
@@ -39,12 +37,15 @@ services:
             - ./:/app
             - composer:/root/.composer/cache
         tty: true
+        environment:
+            STORAGE_FTP_HOST: ${STORAGE_FTP_HOST}
+            STORAGE_FTP_USERNAME: ${STORAGE_FTP_USERNAME}
+            STORAGE_FTP_PASSWORD: ${STORAGE_FTP_PASSWORD}
         depends_on:
             - postgres
             - mailer
             - redis
-        networks:
-            - internal
+            - storage
 
     postgres:
         image: postgres:11.2-alpine
@@ -56,22 +57,16 @@ services:
             POSTGRES_DB: app
         ports:
             - 54321:5432
-        networks:
-            - internal
 
     redis:
         image: redis:3.0-alpine
         volumes:
             - redis:/data
-        networks:
-            - internal
 
     mailer:
         image: mailhog/mailhog
         ports:
             - 8026:8025
-        networks:
-            - internal
 
     node:
         image: node:11.13-alpine
@@ -87,6 +82,24 @@ services:
         working_dir: /app
         command: sh -c "yarn install && yarn watch"
 
+    storage:
+        build:
+            context: ./docker/dev/storage
+            dockerfile: Dockerfile
+        volumes:
+            - ./storage:/app
+        ports:
+            - "8081:80"
+
+    storage-ftp:
+        image: stilliard/pure-ftpd
+        environment:
+            FTP_USER_NAME: app
+            FTP_USER_PASS: secret
+            FTP_USER_HOME: /app
+        volumes:
+            - ./storage:/app
+
 volumes:
     postgres:
         driver: local
@@ -94,11 +107,3 @@ volumes:
         driver: local
     composer:
         driver: local
-
-networks:
-    internal:
-        driver: bridge
-        ipam:
-            driver: default
-            config:
-                - subnet: 192.168.220.0/28
