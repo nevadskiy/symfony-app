@@ -19,10 +19,6 @@ services:
             dockerfile: Dockerfile
         volumes:
             - ./:/app
-        environment:
-            STORAGE_FTP_HOST: ${STORAGE_FTP_HOST}
-            STORAGE_FTP_USERNAME: ${STORAGE_FTP_USERNAME}
-            STORAGE_FTP_PASSWORD: ${STORAGE_FTP_PASSWORD}
         depends_on:
             - postgres
             - mailer
@@ -37,10 +33,6 @@ services:
             - ./:/app
             - composer:/root/.composer/cache
         tty: true
-        environment:
-            STORAGE_FTP_HOST: ${STORAGE_FTP_HOST}
-            STORAGE_FTP_USERNAME: ${STORAGE_FTP_USERNAME}
-            STORAGE_FTP_PASSWORD: ${STORAGE_FTP_PASSWORD}
         depends_on:
             - postgres
             - mailer
