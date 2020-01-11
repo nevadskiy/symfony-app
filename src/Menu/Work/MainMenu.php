@@ -28,6 +28,10 @@ class MainMenu
             ->setAttribute('class', 'nav-item')
             ->setLinkAttribute('class', 'nav-link');
 
+        $menu->addChild('Actions', ['route' => 'work.projects.actions'])
+            ->setAttribute('class', 'nav-item')
+            ->setLinkAttribute('class', 'nav-link');
+
         $menu->addChild('Tasks', ['route' => 'work.projects.tasks'])
             ->setExtra('routes', [
                 ['route' => 'work.projects.tasks'],

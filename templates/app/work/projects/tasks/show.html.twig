@@ -336,6 +336,22 @@
                     </table>
                 {% endif %}
             </div>
+
+            <div class="card">
+                <div class="card-header">History</div>
+                <table class="table mb-0">
+                    <tbody>
+                    {% for action in actions %}
+                        <tr>
+                            <td>
+                                {{ action.date|date('Y-m-d H:i') }}
+                                {{ work_projects_action_row(action) }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
