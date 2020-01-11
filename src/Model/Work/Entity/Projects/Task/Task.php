@@ -191,9 +191,14 @@ class Task
         $this->content = $content;
     }
 
-    public function plan(?DateTimeImmutable $date): void
+    public function plan(DateTimeImmutable $date): void
     {
         $this->planDate = $date;
+    }
+
+    public function removePlan(): void
+    {
+        $this->planDate = null;
     }
 
     public function getPlanDate(): ?DateTimeImmutable
@@ -201,27 +206,32 @@ class Task
         return $this->planDate;
     }
 
-    public function setChildOf(?Task $parent): void
+    public function setChildOf(Task $parent): void
     {
-        $this->guardCycle($parent);
+        if ($parent === $this->parent) {
+            return;
+        }
+
+        $current = $parent;
+
+        do {
+            if ($current === $this) {
+                throw new DomainException('Cyclomatic children.');
+            }
+        }
+        while ($current && $current = $current->getParent());
+
         $this->parent = $parent;
+    }
+
+    public function setRoot(): void
+    {
+        $this->parent = null;
     }
 
     public function getParent(): ?Task
     {
         return $this->parent;
-    }
-
-    protected function guardCycle(?Task $parent): void
-    {
-        if ($parent) {
-            $current = $parent;
-            do {
-                if ($current === $this) {
-                    throw new DomainException('Cyclomatic children.');
-                }
-            } while ($current && $current = $current->getParent());
-        }
     }
 
     public function move(Project $project): void

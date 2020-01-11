@@ -8,9 +8,10 @@ use App\Tests\Builder\Work\Members\GroupBuilder;
 use App\Tests\Builder\Work\Members\MemberBuilder;
 use App\Tests\Builder\Work\Projects\ProjectBuilder;
 use App\Tests\Builder\Work\Projects\TaskBuilder;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
-class PlanTest extends TestCase
+class RemovePlanTest extends TestCase
 {
     public function testSuccess(): void
     {
@@ -19,8 +20,12 @@ class PlanTest extends TestCase
         $project = (new ProjectBuilder())->build();
         $task = (new TaskBuilder())->build($project, $member);
 
-        $task->plan($date = new \DateTimeImmutable());
+        $task->plan($date = new DateTimeImmutable());
 
         self::assertEquals($date, $task->getPlanDate());
+
+        $task->removePlan();
+
+        self::assertNull($task->getPlanDate());
     }
 }
