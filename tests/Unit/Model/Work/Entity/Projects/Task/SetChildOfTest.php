@@ -8,6 +8,7 @@ use App\Tests\Builder\Work\Members\GroupBuilder;
 use App\Tests\Builder\Work\Members\MemberBuilder;
 use App\Tests\Builder\Work\Projects\ProjectBuilder;
 use App\Tests\Builder\Work\Projects\TaskBuilder;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class SetChildOfTest extends TestCase
@@ -20,7 +21,7 @@ class SetChildOfTest extends TestCase
         $task = (new TaskBuilder())->build($project, $member);
         $parent = (new TaskBuilder())->build($project, $member);
 
-        $task->setChildOf($parent);
+        $task->setChildOf($member, new DateTimeImmutable(), $parent);
 
         self::assertEquals($parent, $task->getParent());
     }
@@ -33,8 +34,7 @@ class SetChildOfTest extends TestCase
         $task = (new TaskBuilder())->build($project, $member);
 
         $this->expectExceptionMessage('Cyclomatic children.');
-
-        $task->setChildOf($task);
+        $task->setChildOf($member, new DateTimeImmutable(), $task);
     }
 
     public function testCycle(): void
@@ -47,11 +47,10 @@ class SetChildOfTest extends TestCase
         $child1 = (new TaskBuilder())->build($project, $member);
         $child2 = (new TaskBuilder())->build($project, $member);
 
-        $child1->setChildOf($task);
-        $child2->setChildOf($child1);
+        $child1->setChildOf($member, new DateTimeImmutable(), $task);
+        $child2->setChildOf($member, new DateTimeImmutable(), $child1);
 
         $this->expectExceptionMessage('Cyclomatic children.');
-
-        $task->setChildOf($child2);
+        $task->setChildOf($member, new DateTimeImmutable(), $child2);
     }
 }

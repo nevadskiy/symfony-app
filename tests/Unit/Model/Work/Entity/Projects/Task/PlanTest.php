@@ -8,6 +8,7 @@ use App\Tests\Builder\Work\Members\GroupBuilder;
 use App\Tests\Builder\Work\Members\MemberBuilder;
 use App\Tests\Builder\Work\Projects\ProjectBuilder;
 use App\Tests\Builder\Work\Projects\TaskBuilder;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class PlanTest extends TestCase
@@ -19,7 +20,7 @@ class PlanTest extends TestCase
         $project = (new ProjectBuilder())->build();
         $task = (new TaskBuilder())->build($project, $member);
 
-        $task->plan($date = new \DateTimeImmutable());
+        $task->plan($member, new DateTimeImmutable(), $date = new DateTimeImmutable('+1 day'));
 
         self::assertEquals($date, $task->getPlanDate());
     }

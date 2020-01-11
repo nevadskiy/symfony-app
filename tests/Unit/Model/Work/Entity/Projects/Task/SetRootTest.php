@@ -8,6 +8,7 @@ use App\Tests\Builder\Work\Members\GroupBuilder;
 use App\Tests\Builder\Work\Members\MemberBuilder;
 use App\Tests\Builder\Work\Projects\ProjectBuilder;
 use App\Tests\Builder\Work\Projects\TaskBuilder;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class SetRootTest extends TestCase
@@ -20,7 +21,7 @@ class SetRootTest extends TestCase
         $task = (new TaskBuilder())->build($project, $member);
         $parent = (new TaskBuilder())->build($project, $member);
 
-        $task->setChildOf($parent);
+        $task->setChildOf($member, new DateTimeImmutable(), $parent);
 
         self::assertEquals($parent, $task->getParent());
 

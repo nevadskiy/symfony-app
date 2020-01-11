@@ -8,6 +8,7 @@ use App\Tests\Builder\Work\Members\GroupBuilder;
 use App\Tests\Builder\Work\Members\MemberBuilder;
 use App\Tests\Builder\Work\Projects\ProjectBuilder;
 use App\Tests\Builder\Work\Projects\TaskBuilder;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class EditTest extends TestCase
@@ -22,6 +23,8 @@ class EditTest extends TestCase
         $task = (new TaskBuilder())->build($project, $member);
 
         $task->edit(
+            $member,
+            new DateTimeImmutable(),
             $name = 'New Name',
             $content = 'New Content'
         );
